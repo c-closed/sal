@@ -99,7 +99,6 @@ API_META = "https://sboard-api.sboard-auto-login.workers.dev/api/meta"
 # 유틸 함수
 # =========================
 def _get_icon_path() -> str:
-    """사용자 환경변수에 따른 아이콘 경로 반환"""
     base = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or os.path.expanduser("~")
     return os.path.join(base, "Sboard 접속기", "icon.ico")
 
