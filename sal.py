@@ -95,7 +95,7 @@ KEYEVENTF_KEYUP = 0x0002
 API_BASE = "https://sboard-api.sboard-auto-login.workers.dev/api/users"
 API_META = "https://sboard-api.sboard-auto-login.workers.dev/api/meta"
 
-CURRENT_VERSION = "1.0.1"
+CURRENT_VERSION = "1.0.2"
 REPO_OWNER = "c-closed"
 REPO_NAME = "sal"
 

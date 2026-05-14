@@ -4,7 +4,7 @@
 ;   2. iscc "Sboard 접속기.iss"                   (Setup 파일 생성)
 
 #define MyAppName "Sboard 접속기"
-#define MyAppVersion "1.0.1"
+#define MyAppVersion "1.0.2"
 #define MyAppPublisher "류호준"
 #define MyAppURL "https://github.com/c-closed/sal"
 #define MyAppExeName "Sboard 접속기.exe"
@@ -82,6 +82,8 @@ end;
 function InitializeSetup: Boolean;
 var
   PrevVersion: string;
+  UninstallString: string;
+  ResultCode: Integer;
 begin
   Result := True;
   if RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{B8F7A3E2-1D4C-4A9E-8B6F-3C2D5E7A9F1B}_is1', 'DisplayVersion', PrevVersion) or
@@ -91,6 +93,14 @@ begin
     begin
       MsgBox('이미 동일하거나 최신 버전(Sboard 접속기 ' + PrevVersion + ')이 설치되어 있습니다.' #13#13 '설치를 계속할 수 없습니다.', mbInformation, MB_OK);
       Result := False;
+      Exit;
+    end;
+    // 구버전이 설치되어 있으면 먼저 제거 (레지스트리 버전 정보 갱신을 위해)
+    if RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{B8F7A3E2-1D4C-4A9E-8B6F-3C2D5E7A9F1B}_is1', 'UninstallString', UninstallString) or
+       RegQueryStringValue(HKCU, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{B8F7A3E2-1D4C-4A9E-8B6F-3C2D5E7A9F1B}_is1', 'UninstallString', UninstallString) then
+    begin
+      UninstallString := RemoveQuotes(UninstallString);
+      Exec(UninstallString, '/SILENT', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
     end;
   end;
 end;

@@ -14,6 +14,13 @@ pyinstaller "Sboard 접속기.spec"
 iscc "Sboard 접속기.iss"
 ```
 
+## 버전 규칙 (GitHub Release 시)
+
+- **UI 변경** → major 증가 (v1.0.0 → v2.0.0)
+- **기능 변경** → minor 증가 (v1.0.0 → v1.1.0)
+- **버그 수정** → patch 증가 (v1.0.0 → v1.0.1)
+- 모든 변경 시 `sal.py`의 `CURRENT_VERSION`과 `Sboard 접속기.iss`의 `MyAppVersion`을 함께 업데이트
+
 ## 아키텍처
 
 - **단일 파일 앱**: 모든 로직이 `sal.py`에 포함
