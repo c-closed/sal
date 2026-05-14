@@ -95,7 +95,7 @@ KEYEVENTF_KEYUP = 0x0002
 API_BASE = "https://sboard-api.sboard-auto-login.workers.dev/api/users"
 API_META = "https://sboard-api.sboard-auto-login.workers.dev/api/meta"
 
-CURRENT_VERSION = "1.0.4"
+CURRENT_VERSION = "1.0.5"
 REPO_OWNER = "c-closed"
 REPO_NAME = "sal"
 
@@ -294,7 +294,7 @@ class LoginLogWindow:
         
         # 로그 영역만 (Consolas 8pt) - 레이블 없음
         self.log_text = scrolledtext.ScrolledText(self.root, wrap=tk.WORD, state="disabled", height=10, font=("Consolas", 8))
-        self.log_text.pack(fill="both", expand=True, padx=5, pady=(5, 0))
+        self.log_text.pack(fill="both", expand=True, padx=8, pady=(8, 0))
     
     def log(self, msg: str):
         ts = datetime.now().strftime("%H:%M:%S")
@@ -335,25 +335,25 @@ class InputDialog:
         self.win.grab_set()
         self.win.resizable(False, False)
 
-        frame = ttk.Frame(self.win, padding=(3, 3, 3, 0))
+        frame = ttk.Frame(self.win, padding=(8, 8, 8, 0))
         frame.pack()
 
         self.entries = {}
         for i, f in enumerate(fields):
             lbl = ttk.Label(frame, text=f["label"])
             lbl.config(font=("맑은 고딕", 11))
-            lbl.grid(row=i, column=0, sticky="w", pady=1)
+            lbl.grid(row=i, column=0, sticky="w", pady=2)
             show_char = "*" if f.get("show") else ""
             ent = ttk.Entry(frame, show=show_char)
-            ent.grid(row=i, column=1, sticky="ew", padx=(3,0), pady=1)
+            ent.grid(row=i, column=1, sticky="ew", padx=(5,0), pady=2)
             ent.config(font=("맑은 고딕", 11))
             self.entries[f["key"]] = ent
             self.win.bind("<Return>", lambda e: self.on_ok())
 
         btn_frame = ttk.Frame(frame)
-        btn_frame.grid(row=len(fields), column=0, columnspan=2, pady=(1,0))
-        ttk.Button(btn_frame, text="확인", command=self.on_ok).pack(side="left", padx=5)
-        ttk.Button(btn_frame, text="취소", command=self.win.destroy).pack(side="left", padx=5)
+        btn_frame.grid(row=len(fields), column=0, columnspan=2, pady=(5,5))
+        ttk.Button(btn_frame, text="확인", command=self.on_ok).pack(side="left", padx=8)
+        ttk.Button(btn_frame, text="취소", command=self.win.destroy).pack(side="left", padx=8)
 
         self.win.bind("<Escape>", lambda e: self.win.destroy())
 
@@ -391,7 +391,7 @@ class UpdateLogWindow:
         self.root.resizable(False, False)
 
         self.log_text = scrolledtext.ScrolledText(self.root, wrap=tk.WORD, state="disabled", font=("Consolas", 8))
-        self.log_text.pack(fill="both", expand=True, padx=5, pady=(5, 0))
+        self.log_text.pack(fill="both", expand=True, padx=8, pady=(8, 0))
 
         self.should_launch = True
         self._done = False
@@ -428,11 +428,11 @@ class UpdateLogWindow:
 
     def _worker(self):
         try:
-            self._log("Github에 연결중")
+            self._log("서버에 연결중")
             client = GitHubAPIClient()
             data = client.get_latest_release(REPO_OWNER, REPO_NAME)
             if data is None:
-                self._log("Github에 연결할 수 없습니다.")
+                self._log("서버에 연결할 수 없습니다.")
                 time.sleep(1.5)
                 self.should_launch = False
                 self._done = True
@@ -444,7 +444,7 @@ class UpdateLogWindow:
                 self._done = True
                 return
 
-            self._log("Github에 연결되었습니다.")
+            self._log("서버에 연결되었습니다.")
             latest_ver = data.get("tag_name", "v0.0.0")
             self._log(f"최신버전 : {latest_ver}")
             current_ver = _get_installed_version()
@@ -516,13 +516,13 @@ class SboardGUI:
         self.root.config(menu=menubar)
         
         # 메인 프레임 (컴팩트)
-        frame = ttk.LabelFrame(self.root, text="자동 로그인", padding=(5, 5, 5, 0))
-        frame.pack(fill="x", padx=3, pady=(3, 0))
+        frame = ttk.LabelFrame(self.root, text="자동 로그인", padding=(8, 8, 8, 0))
+        frame.pack(fill="x", padx=5, pady=(5, 0))
         
         ttk.Label(frame, text="사용자명", font=("맑은 고딕", 9)).pack(anchor="w")
         
         self.login_entry = ttk.Entry(frame, justify="center", font=("맑은 고딕", 9))
-        self.login_entry.pack(fill="x", ipady=4, pady=(0,2))
+        self.login_entry.pack(fill="x", ipady=4, pady=(0,3))
         self.login_entry.bind("<Return>", lambda e: self.do_login())
         
         self.login_btn = ttk.Button(frame, text="로그인", command=self.do_login)
@@ -860,7 +860,7 @@ class SboardGUI:
         _try_set_icon(list_win)
         list_win.transient(self.root)
         
-        frame = ttk.Frame(list_win, padding=(3, 3, 3, 0))
+        frame = ttk.Frame(list_win, padding=(8, 8, 8, 0))
         frame.pack(fill="both", expand=True)
 
         loading_label = ttk.Label(frame, text="불러오는 중입니다...", font=("맑은 고딕", 11))
@@ -881,7 +881,7 @@ class SboardGUI:
         
         def _on_success(items):
             loading_label.pack_forget()
-            tree.pack(fill="both", expand=True)
+            tree.pack(fill="both", expand=True, padx=5, pady=5)
             tree.delete(*tree.get_children())
             for name, uid in items:
                 tree.insert("", "end", values=(name, uid))
