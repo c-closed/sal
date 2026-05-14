@@ -95,6 +95,10 @@ KEYEVENTF_KEYUP = 0x0002
 API_BASE = "https://sboard-api.sboard-auto-login.workers.dev/api/users"
 API_META = "https://sboard-api.sboard-auto-login.workers.dev/api/meta"
 
+CURRENT_VERSION = "1.0.0"
+REPO_OWNER = "c-closed"
+REPO_NAME = "sal"
+
 # =========================
 # 유틸 함수
 # =========================
@@ -175,6 +179,42 @@ class SboardApi:
         r = self._request("DELETE", f"{self.base_url}/{username}")
         r.raise_for_status()
 
+class VersionManager:
+    @staticmethod
+    def parse_version(version_str: str) -> tuple:
+        try:
+            clean_ver = version_str.lstrip('v')
+            parts = clean_ver.split('.')
+            major = int(parts[0]) if len(parts) > 0 else 0
+            minor = int(parts[1]) if len(parts) > 1 else 0
+            patch = int(parts[2]) if len(parts) > 2 else 0
+            return (major, minor, patch)
+        except (ValueError, AttributeError, IndexError):
+            return (0, 0, 0)
+
+    @staticmethod
+    def is_newer(current: str, latest: str) -> bool:
+        return VersionManager.parse_version(latest) > VersionManager.parse_version(current)
+
+
+class GitHubAPIClient:
+    # Return values:
+    #   dict -> release found
+    #   None -> connection/network error
+    #   {}   -> no releases yet (404)
+    def get_latest_release(self, owner: str, repo: str) -> Optional[dict]:
+        api_url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
+        try:
+            import requests
+            resp = requests.get(api_url, timeout=10)
+            if resp.status_code == 404:
+                return {}  # No releases yet (non-fatal)
+            resp.raise_for_status()
+            return resp.json()
+        except:
+            return None  # Connection error
+
+
 # =========================
 # Win32 입력 도우미 (Lazy)
 # =========================
@@ -221,15 +261,15 @@ class LoginLogWindow:
     def __init__(self, master, username: str):
         self.root = tk.Toplevel(master)
         self.root.title(f"{username} 로그인 진행")
-        _center_window(self.root, 400, 400)
+        _center_window(self.root, 380, 220)
         _try_set_icon(self.root)
         self.root.resizable(False, True)
         self.root.attributes("-topmost", True)
         self.root.transient(master)
         
         # 로그 영역만 (Consolas 8pt) - 레이블 없음
-        self.log_text = scrolledtext.ScrolledText(self.root, wrap=tk.WORD, state="disabled", height=20, font=("Consolas", 8))
-        self.log_text.pack(fill="both", expand=True, padx=10, pady=10)
+        self.log_text = scrolledtext.ScrolledText(self.root, wrap=tk.WORD, state="disabled", height=10, font=("Consolas", 8))
+        self.log_text.pack(fill="both", expand=True, padx=5, pady=(5, 0))
     
     def log(self, msg: str):
         ts = datetime.now().strftime("%H:%M:%S")
@@ -260,36 +300,45 @@ class InputDialog:
     def __init__(self, parent, title, fields, check_func=None):
         self.parent = parent
         self.title = title
-        self.fields = fields  # list of dict: {"label": str, "key": str, "show": bool (optional)}
-        self.check_func = check_func  # 검증 함수 (values dict -> error_msg str or None)
+        self.fields = fields
+        self.check_func = check_func
         self.result = None
-        
+
         self.win = tk.Toplevel(parent)
         self.win.title(title)
         self.win.transient(parent)
         self.win.grab_set()
-        _center_window(self.win, 220, 140 + len(fields) * 30)
-        _try_set_icon(self.win)
-        
-        frame = ttk.Frame(self.win, padding=15)
-        frame.pack(fill="both", expand=True)
-        
+        self.win.resizable(False, False)
+
+        frame = ttk.Frame(self.win, padding=(3, 3, 3, 0))
+        frame.pack()
+
         self.entries = {}
         for i, f in enumerate(fields):
             lbl = ttk.Label(frame, text=f["label"])
-            lbl.config(font=("맑은 고딕", 9))
-            lbl.grid(row=i, column=0, sticky="w", pady=5)
+            lbl.config(font=("맑은 고딕", 11))
+            lbl.grid(row=i, column=0, sticky="w", pady=1)
             show_char = "*" if f.get("show") else ""
             ent = ttk.Entry(frame, show=show_char)
-            ent.grid(row=i, column=1, sticky="ew", padx=(10,0), pady=5)
-            ent.config(font=("맑은 고딕", 9))
+            ent.grid(row=i, column=1, sticky="ew", padx=(3,0), pady=1)
+            ent.config(font=("맑은 고딕", 11))
             self.entries[f["key"]] = ent
             self.win.bind("<Return>", lambda e: self.on_ok())
-        
+
         btn_frame = ttk.Frame(frame)
-        btn_frame.grid(row=len(fields), column=0, columnspan=2, pady=(15,0))
+        btn_frame.grid(row=len(fields), column=0, columnspan=2, pady=(1,0))
         ttk.Button(btn_frame, text="확인", command=self.on_ok).pack(side="left", padx=5)
         ttk.Button(btn_frame, text="취소", command=self.win.destroy).pack(side="left", padx=5)
+
+        self.win.bind("<Escape>", lambda e: self.win.destroy())
+
+        # Size to content
+        self.win.update_idletasks()
+        w = max(220, self.win.winfo_reqwidth())
+        h = self.win.winfo_reqheight()
+        ws = self.win.winfo_screenwidth()
+        hs = self.win.winfo_screenheight()
+        self.win.geometry(f"{w}x{h}+{(ws - w) // 2}+{(hs - h) // 2}")
     
     def on_ok(self):
         values = {key: ent.get() for key, ent in self.entries.items()}
@@ -304,6 +353,101 @@ class InputDialog:
     def show(self):
         self.win.wait_window(self.win)
         return self.result
+
+# =========================
+# 업데이트 확인 창
+# =========================
+class UpdateLogWindow:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("업데이트 확인")
+        _center_window(self.root, 350, 150)
+        _try_set_icon(self.root)
+        self.root.resizable(False, False)
+
+        self.log_text = scrolledtext.ScrolledText(self.root, wrap=tk.WORD, state="disabled", font=("Consolas", 8))
+        self.log_text.pack(fill="both", expand=True, padx=5, pady=(5, 0))
+
+        self.should_launch = True
+        self._done = False
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
+        self.root.bind("<Escape>", lambda e: self._on_close())
+        self.root.after(100, self._start)
+
+    def _on_close(self):
+        self.should_launch = False
+        self._done = True
+        self.root.quit()
+
+    def _start(self):
+        threading.Thread(target=self._worker, daemon=True).start()
+        self.root.after(300, self._poll)
+
+    def _poll(self):
+        if self._done:
+            self.root.quit()
+        else:
+            self.root.after(200, self._poll)
+
+    def _log(self, msg: str):
+        if self._done:
+            return
+        try:
+            ts = datetime.now().strftime("%H:%M:%S")
+            self.log_text.config(state="normal")
+            self.log_text.insert(tk.END, f"[{ts}] {msg}\n")
+            self.log_text.see(tk.END)
+            self.log_text.config(state="disabled")
+        except tk.TclError:
+            pass
+
+    def _worker(self):
+        try:
+            self._log("Github에 연결중")
+            client = GitHubAPIClient()
+            data = client.get_latest_release(REPO_OWNER, REPO_NAME)
+            if data is None:
+                self._log("Github에 연결할 수 없습니다.")
+                time.sleep(1.5)
+                self.should_launch = False
+                self._done = True
+                return
+            if not data:
+                self._log("저장소에 릴리스가 없습니다.")
+                time.sleep(1)
+                self.should_launch = True
+                self._done = True
+                return
+
+            self._log("Github에 연결되었습니다.")
+            latest_ver = data.get("tag_name", "v0.0.0")
+            self._log(f"최신버전 : {latest_ver}")
+            self._log(f"현재버전 : v{CURRENT_VERSION}")
+
+            if not VersionManager.is_newer(CURRENT_VERSION, latest_ver):
+                self._log("최신버전입니다.")
+                time.sleep(0.5)
+                for i in range(3, 0, -1):
+                    self._log(f"{i}초 후 프로그램이 시작됩니다.")
+                    time.sleep(1)
+                self.should_launch = True
+            else:
+                self._log("업데이트를 시작합니다.")
+                time.sleep(0.5)
+                import webbrowser
+                webbrowser.open(data.get("html_url", ""))
+                self.should_launch = False
+        except Exception as e:
+            self._log(f"오류: {e}")
+            time.sleep(1.5)
+            self.should_launch = True
+        finally:
+            self._done = True
+
+    def run(self):
+        self.root.mainloop()
+        self.root.destroy()
+
 
 # =========================
 # GUI 애플리케이션
@@ -324,7 +468,6 @@ class SboardGUI:
         # ttk 전체 위젯에 폰트 적용 (TclError 방지)
         style = ttk.Style()
         style.configure(".", font=("맑은 고딕", 9))
-        _center_window(self.root, 320, 180)
         _try_set_icon(self.root)
         self.root.resizable(False, False)
         
@@ -347,17 +490,25 @@ class SboardGUI:
         self.root.config(menu=menubar)
         
         # 메인 프레임 (컴팩트)
-        frame = ttk.LabelFrame(self.root, text="자동 로그인", padding=15)
-        frame.pack(fill="both", expand=True, padx=10, pady=10)
+        frame = ttk.LabelFrame(self.root, text="자동 로그인", padding=(5, 5, 5, 0))
+        frame.pack(fill="x", padx=3, pady=(3, 0))
         
-        ttk.Label(frame, text="사용자명 (한글):", font=("맑은 고딕", 9)).pack(anchor="w", pady=(0,5))
+        ttk.Label(frame, text="사용자명", font=("맑은 고딕", 9)).pack(anchor="w")
         
         self.login_entry = ttk.Entry(frame, justify="center", font=("맑은 고딕", 9))
-        self.login_entry.pack(fill="x", ipady=5, pady=(0,10))
+        self.login_entry.pack(fill="x", ipady=4, pady=(0,2))
         self.login_entry.bind("<Return>", lambda e: self.do_login())
         
         self.login_btn = ttk.Button(frame, text="로그인", command=self.do_login)
-        self.login_btn.pack(fill="x", ipady=3)
+        self.login_btn.pack(fill="x", ipady=2)
+        
+        # Size to content
+        self.root.update_idletasks()
+        w = max(260, self.root.winfo_reqwidth())
+        h = self.root.winfo_reqheight()
+        ws = self.root.winfo_screenwidth()
+        hs = self.root.winfo_screenheight()
+        self.root.geometry(f"{w}x{h}+{(ws - w) // 2}+{(hs - h) // 2}")
     
     def _poll_queues(self):
         """메인 스레드에서 로그 큐와 Tkinter 작업 큐를 폴링"""
@@ -679,26 +830,28 @@ class SboardGUI:
     def show_users_list(self):
         list_win = tk.Toplevel(self.root)
         list_win.title("사용자 목록")
-        _center_window(list_win, 260, 260)
+        _center_window(list_win, 240, 185)
         _try_set_icon(list_win)
         list_win.transient(self.root)
         
-        frame = ttk.Frame(list_win, padding=10)
+        frame = ttk.Frame(list_win, padding=(3, 3, 3, 0))
         frame.pack(fill="both", expand=True)
-        
-        loading_label = ttk.Label(frame, text="불러오는 중입니다...", font=("맑은 고딕", 9))
+
+        loading_label = ttk.Label(frame, text="불러오는 중입니다...", font=("맑은 고딕", 11))
         loading_label.pack(expand=True)
         
         tree = ttk.Treeview(frame, columns=("name", "id"), show="headings", height=8)
         tree.heading("name", text="이름")
         tree.heading("id", text="ID")
         tree.column("name", width=100, anchor="center")
-        tree.column("id", width=80, anchor="center")
+        tree.column("id", width=100, anchor="center")
         
         # 12pt 폰트에 맞게 행 높이 조정 (ttk 스타일)
         style = ttk.Style()
-        style.configure("Treeview", rowheight=28, font=("맑은 고딕", 9))
-        style.configure("Treeview.Heading", font=("맑은 고딕", 9, "bold"))
+        style.configure("Treeview", rowheight=28, font=("맑은 고딕", 11))
+        style.configure("Treeview.Heading", font=("맑은 고딕", 11, "bold"))
+        
+        list_win.bind("<Escape>", lambda e: list_win.destroy())
         
         def _on_success(items):
             loading_label.pack_forget()
@@ -743,24 +896,51 @@ class SboardGUI:
                 messagebox.showerror("오류", str(e), parent=parent)
     
     def _change_pw_action(self, parent):
-        dlg = InputDialog(parent, "PW 변경", [
+        # Step 1: Verify current credentials
+        dlg = InputDialog(parent, "PW 변경 - 본인 확인", [
             {"label": "이름", "key": "name"},
             {"label": "ID", "key": "uid"},
+            {"label": "현재 PW", "key": "pw", "show": True}
+        ])
+        res = dlg.show()
+        if not res:
+            return
+
+        try:
+            data = self.api.get_users()
+            users = data.get("users", data)
+        except Exception as e:
+            messagebox.showerror("오류", f"서버 연결 실패: {e}", parent=parent)
+            return
+
+        name, uid, pw = res["name"], res["uid"], res["pw"]
+        if name not in users or users[name]["id"] != uid or users[name]["pw"] != pw:
+            messagebox.showerror("오류", "사용자 정보가 일치하지 않습니다.", parent=parent)
+            return
+
+        # Step 2: Enter new password
+        dlg2 = InputDialog(parent, "PW 변경 - 새 비밀번호", [
             {"label": "새 PW", "key": "new_pw", "show": True}
         ], check_func=lambda v: (
-            "모든 값을 입력해주세요." if not all([v.get("name"), v.get("uid"), v.get("new_pw")]) else
-            "사용자 정보가 일치하지 않습니다." if v["name"] not in self.users_cache or self.users_cache[v["name"]]["id"] != v["uid"] else None
+            "새 PW를 입력해주세요." if not v.get("new_pw") else None
         ))
-        res = dlg.show()
-        if res:
-            try:
-                self.api.update_user_pw_only(res["name"], res["uid"], res["new_pw"])
-                messagebox.showinfo("성공", "변경 완료!", parent=parent)
-                self.users_cache.clear()
-            except Exception as e:
-                messagebox.showerror("오류", str(e), parent=parent)
+        res2 = dlg2.show()
+        if not res2:
+            return
+
+        try:
+            self.api.update_user_pw_only(name, uid, res2["new_pw"])
+            messagebox.showinfo("성공", "변경 완료!", parent=parent)
+            self.users_cache.clear()
+        except Exception as e:
+            messagebox.showerror("오류", str(e), parent=parent)
     
     def _delete_action(self, parent):
+        try:
+            data = self.api.get_users()
+            self.users_cache = data.get("users", data)
+        except:
+            pass
         dlg = InputDialog(parent, "사용자 삭제", [
             {"label": "이름", "key": "name"},
             {"label": "ID", "key": "uid"},
@@ -780,14 +960,15 @@ class SboardGUI:
                     messagebox.showerror("오류", str(e), parent=parent)
     
     def _on_close(self):
-        """Tkinter 창 종료 시 sboard.exe는 유지하고 GUI만 종료"""
-        # sboard.exe는 건드리지 않음
-        self.root.withdraw()  # 창 숨기기 (완전 종료하지 않음)
-        # mainloop는 계속 실행 (백그라운드 작업 대기)
+        self.root.destroy()
     
     def run(self):
         self.root.mainloop()
 
 if __name__ == "__main__":
-    app = SboardGUI()
-    app.run()
+    update_win = UpdateLogWindow()
+    update_win.run()
+    time.sleep(0.5)
+    if update_win.should_launch:
+        app = SboardGUI()
+        app.run()
