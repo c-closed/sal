@@ -95,13 +95,30 @@ KEYEVENTF_KEYUP = 0x0002
 API_BASE = "https://sboard-api.sboard-auto-login.workers.dev/api/users"
 API_META = "https://sboard-api.sboard-auto-login.workers.dev/api/meta"
 
-CURRENT_VERSION = "1.0.3"
+CURRENT_VERSION = "1.0.4"
 REPO_OWNER = "c-closed"
 REPO_NAME = "sal"
 
 # =========================
 # 유틸 함수
 # =========================
+def _get_installed_version() -> str:
+    import winreg
+    subkey = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{B8F7A3E2-1D4C-4A9E-8B6F-3C2D5E7A9F1B}_is1"
+    for root, path, flags in [
+        (winreg.HKEY_LOCAL_MACHINE, subkey, winreg.KEY_READ | 0x100),
+        (winreg.HKEY_LOCAL_MACHINE, subkey, winreg.KEY_READ | 0x200),
+        (winreg.HKEY_CURRENT_USER, subkey, winreg.KEY_READ),
+    ]:
+        try:
+            key = winreg.OpenKey(root, path, access=flags)
+            version, _ = winreg.QueryValueEx(key, "DisplayVersion")
+            winreg.CloseKey(key)
+            return version
+        except (FileNotFoundError, OSError):
+            continue
+    return CURRENT_VERSION
+
 def _get_icon_path() -> str:
     apd = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or os.path.expanduser("~")
     path = os.path.join(apd, "Sboard 접속기", "icon.ico")
@@ -430,9 +447,10 @@ class UpdateLogWindow:
             self._log("Github에 연결되었습니다.")
             latest_ver = data.get("tag_name", "v0.0.0")
             self._log(f"최신버전 : {latest_ver}")
-            self._log(f"현재버전 : v{CURRENT_VERSION}")
-
-            if not VersionManager.is_newer(CURRENT_VERSION, latest_ver):
+            current_ver = _get_installed_version()
+            self._log(f"현재버전 : v{current_ver}")
+            time.sleep(0.5)
+            if not VersionManager.is_newer(current_ver, latest_ver):
                 self._log("최신버전입니다.")
                 time.sleep(0.5)
                 for i in range(3, 0, -1):
