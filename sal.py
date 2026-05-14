@@ -95,7 +95,7 @@ KEYEVENTF_KEYUP = 0x0002
 API_BASE = "https://sboard-api.sboard-auto-login.workers.dev/api/users"
 API_META = "https://sboard-api.sboard-auto-login.workers.dev/api/meta"
 
-CURRENT_VERSION = "1.0.0"
+CURRENT_VERSION = "1.0.1"
 REPO_OWNER = "c-closed"
 REPO_NAME = "sal"
 
@@ -103,8 +103,16 @@ REPO_NAME = "sal"
 # 유틸 함수
 # =========================
 def _get_icon_path() -> str:
-    base = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or os.path.expanduser("~")
-    return os.path.join(base, "Sboard 접속기", "icon.ico")
+    apd = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or os.path.expanduser("~")
+    path = os.path.join(apd, "Sboard 접속기", "icon.ico")
+    if os.path.exists(path):
+        return path
+    app_dir = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__))
+    for sub in ('', '_internal'):
+        path = os.path.join(app_dir, sub, "icon.ico")
+        if os.path.exists(path):
+            return path
+    return os.path.join(apd, "Sboard 접속기", "icon.ico")
 
 def _try_set_icon(window):
     """아이콘 적용 시도"""
