@@ -1,0 +1,12 @@
+﻿__pycache__/
+*.pyc
+.env
+*.egg-info/
+dist/
+build/
+*.spec
+*.iss
+.vscode/
+.idea/
+.wrangler/
+node_modules/

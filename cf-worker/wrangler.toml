@@ -1,0 +1,15 @@
+# Cloudflare Workers 설정 파일
+# ========================================
+# name: Worker 이름 (배포 URL: https://<name>.<account>.workers.dev)
+# compatibility_date: 기능 플래그를 위한 날짜 (변경 불필요)
+
+name = "sboard-api"
+main = "src/index.js"
+compatibility_date = "2024-12-30"
+
+# D1 데이터베이스 바인딩
+[[ d1_databases ]]
+binding = "DB"
+database_name = "sboard-db"
+database_id = "46a94857-4f07-40f5-9b22-966e33d1a999"
+preview_database_id = "D1_LOCAL_ID"
