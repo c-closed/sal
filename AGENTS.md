@@ -8,7 +8,10 @@ cd "D:\99. 개인자료\00. 개발\sal"
 python sal.py
 
 # PyInstaller 패키징 (dist/Sboard 접속기.exe 생성)
-pyinstaller --onefile --windowed --name="Sboard 접속기" sal.py
+pyinstaller "Sboard 접속기.spec"
+
+# InnoSetup 설치 패키징 (dist/Sboard_Setup.exe 생성)
+iscc "Sboard 접속기.iss"
 ```
 
 ## 아키텍처
