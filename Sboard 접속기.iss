@@ -4,7 +4,7 @@
 ;   2. iscc "Sboard 접속기.iss"                   (Setup 파일 생성)
 
 #define MyAppName "Sboard 접속기"
-#define MyAppVersion "1.0.5"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "류호준"
 #define MyAppURL "https://github.com/c-closed/sal"
 #define MyAppExeName "Sboard 접속기.exe"

@@ -95,7 +95,7 @@ KEYEVENTF_KEYUP = 0x0002
 API_BASE = "https://sboard-api.sboard-auto-login.workers.dev/api/users"
 API_META = "https://sboard-api.sboard-auto-login.workers.dev/api/meta"
 
-CURRENT_VERSION = "1.0.5"
+CURRENT_VERSION = "1.1.0"
 REPO_OWNER = "c-closed"
 REPO_NAME = "sal"
 
@@ -286,7 +286,7 @@ class LoginLogWindow:
     def __init__(self, master, username: str):
         self.root = tk.Toplevel(master)
         self.root.title(f"{username} 로그인 진행")
-        _center_window(self.root, 380, 220)
+        _center_window(self.root, 380, 240)
         _try_set_icon(self.root)
         self.root.resizable(False, True)
         self.root.attributes("-topmost", True)
@@ -294,7 +294,7 @@ class LoginLogWindow:
         
         # 로그 영역만 (Consolas 8pt) - 레이블 없음
         self.log_text = scrolledtext.ScrolledText(self.root, wrap=tk.WORD, state="disabled", height=10, font=("Consolas", 8))
-        self.log_text.pack(fill="both", expand=True, padx=8, pady=(8, 0))
+        self.log_text.pack(fill="both", expand=True, padx=12, pady=(12, 8))
     
     def log(self, msg: str):
         ts = datetime.now().strftime("%H:%M:%S")
@@ -335,31 +335,34 @@ class InputDialog:
         self.win.grab_set()
         self.win.resizable(False, False)
 
-        frame = ttk.Frame(self.win, padding=(8, 8, 8, 0))
+        frame = ttk.Frame(self.win, padding=(15, 15, 15, 5))
         frame.pack()
 
         self.entries = {}
         for i, f in enumerate(fields):
             lbl = ttk.Label(frame, text=f["label"])
             lbl.config(font=("맑은 고딕", 11))
-            lbl.grid(row=i, column=0, sticky="w", pady=2)
+            lbl.grid(row=i, column=0, sticky="w", pady=4)
             show_char = "*" if f.get("show") else ""
             ent = ttk.Entry(frame, show=show_char)
-            ent.grid(row=i, column=1, sticky="ew", padx=(5,0), pady=2)
+            ent.grid(row=i, column=1, sticky="ew", padx=(8,0), pady=4)
             ent.config(font=("맑은 고딕", 11))
             self.entries[f["key"]] = ent
             self.win.bind("<Return>", lambda e: self.on_ok())
 
+        target = self.entries.get("name") or next(iter(self.entries.values()))
+        target.focus()
+
         btn_frame = ttk.Frame(frame)
-        btn_frame.grid(row=len(fields), column=0, columnspan=2, pady=(5,5))
-        ttk.Button(btn_frame, text="확인", command=self.on_ok).pack(side="left", padx=8)
-        ttk.Button(btn_frame, text="취소", command=self.win.destroy).pack(side="left", padx=8)
+        btn_frame.grid(row=len(fields), column=0, columnspan=2, pady=(8,5))
+        ttk.Button(btn_frame, text="확인", command=self.on_ok).pack(side="left", padx=12)
+        ttk.Button(btn_frame, text="취소", command=self.win.destroy).pack(side="left", padx=12)
 
         self.win.bind("<Escape>", lambda e: self.win.destroy())
 
         # Size to content
         self.win.update_idletasks()
-        w = max(220, self.win.winfo_reqwidth())
+        w = max(280, self.win.winfo_reqwidth())
         h = self.win.winfo_reqheight()
         ws = self.win.winfo_screenwidth()
         hs = self.win.winfo_screenheight()
@@ -386,12 +389,12 @@ class UpdateLogWindow:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("업데이트 확인")
-        _center_window(self.root, 350, 150)
+        _center_window(self.root, 380, 170)
         _try_set_icon(self.root)
         self.root.resizable(False, False)
 
         self.log_text = scrolledtext.ScrolledText(self.root, wrap=tk.WORD, state="disabled", font=("Consolas", 8))
-        self.log_text.pack(fill="both", expand=True, padx=8, pady=(8, 0))
+        self.log_text.pack(fill="both", expand=True, padx=12, pady=(12, 8))
 
         self.should_launch = True
         self._done = False
@@ -515,26 +518,27 @@ class SboardGUI:
         
         self.root.config(menu=menubar)
         
-        # 메인 프레임 (컴팩트)
-        frame = ttk.LabelFrame(self.root, text="자동 로그인", padding=(8, 8, 8, 0))
-        frame.pack(fill="x", padx=5, pady=(5, 0))
+        # 메인 프레임
+        frame = ttk.LabelFrame(self.root, text="자동 로그인", padding=(15, 12, 15, 8))
+        frame.pack(fill="x", padx=8, pady=(8, 5))
         
         ttk.Label(frame, text="사용자명", font=("맑은 고딕", 9)).pack(anchor="w")
         
         self.login_entry = ttk.Entry(frame, justify="center", font=("맑은 고딕", 9))
-        self.login_entry.pack(fill="x", ipady=4, pady=(0,3))
+        self.login_entry.pack(fill="x", ipady=5, pady=(0,5))
         self.login_entry.bind("<Return>", lambda e: self.do_login())
         
         self.login_btn = ttk.Button(frame, text="로그인", command=self.do_login)
-        self.login_btn.pack(fill="x", ipady=2)
+        self.login_btn.pack(fill="x", ipady=3)
         
         # Size to content
         self.root.update_idletasks()
-        w = max(260, self.root.winfo_reqwidth())
+        w = max(300, self.root.winfo_reqwidth())
         h = self.root.winfo_reqheight()
         ws = self.root.winfo_screenwidth()
         hs = self.root.winfo_screenheight()
         self.root.geometry(f"{w}x{h}+{(ws - w) // 2}+{(hs - h) // 2}")
+        self.login_entry.focus()
     
     def _poll_queues(self):
         """메인 스레드에서 로그 큐와 Tkinter 작업 큐를 폴링"""
@@ -785,7 +789,6 @@ class SboardGUI:
                     self._log("로그인 실패 (정보 불일치)")
                     if self._log_window:
                         self._tk_task_queue.put(lambda: self._log_window.log("로그인 정보가 일치하지 않습니다."))
-                        self._tk_task_queue.put(self._log_window.start_countdown)
                     return
             except Exception as e:
                 self._log(f"팝업 확인 오류: {e}")
@@ -806,7 +809,6 @@ class SboardGUI:
                 self._log(f"창 목록 확인 오류: {e}")
             if self._log_window:
                 self._tk_task_queue.put(lambda: self._log_window.log("로그인 정보가 일치하지 않습니다."))
-                self._tk_task_queue.put(self._log_window.start_countdown)
     
     # =========================
     # Win32 헬퍼 (팝업 감지용)
@@ -856,11 +858,11 @@ class SboardGUI:
     def show_users_list(self):
         list_win = tk.Toplevel(self.root)
         list_win.title("사용자 목록")
-        _center_window(list_win, 240, 185)
+        _center_window(list_win, 280, 220)
         _try_set_icon(list_win)
         list_win.transient(self.root)
         
-        frame = ttk.Frame(list_win, padding=(8, 8, 8, 0))
+        frame = ttk.Frame(list_win, padding=(12, 12, 12, 5))
         frame.pack(fill="both", expand=True)
 
         loading_label = ttk.Label(frame, text="불러오는 중입니다...", font=("맑은 고딕", 11))
@@ -881,7 +883,7 @@ class SboardGUI:
         
         def _on_success(items):
             loading_label.pack_forget()
-            tree.pack(fill="both", expand=True, padx=5, pady=5)
+            tree.pack(fill="both", expand=True, padx=8, pady=8)
             tree.delete(*tree.get_children())
             for name, uid in items:
                 tree.insert("", "end", values=(name, uid))
