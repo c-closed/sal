@@ -662,15 +662,7 @@ class SboardGUI:
                         launched = True
                         break
                     except OSError as pe:
-                        if getattr(pe, 'winerror', None) == 740:
-                            self._log("관리자 권한 요청...")
-                            try:
-                                ret = ctypes.windll.shell32.ShellExecuteW(None, "runas", p, None, None, 1)
-                                if ret > 32:
-                                    launched = True
-                                    break
-                            except:
-                                pass
+                        self._log(f"Sboard 실행 실패: {pe}")
             if not launched:
                 self._log("Sboard 실행 파일을 찾지 못함")
                 self._log("환경변수 SBOARD_EXE_PATH를 설정하거나 실행 파일을 확인하세요.")
@@ -751,16 +743,10 @@ class SboardGUI:
         import pyautogui
         
         # 포커스 이동
-        import ctypes as _ct
-        user32 = _ct.windll.user32
         rect = state.get("window_rect")
         if rect:
             pyautogui.click(rect[0] + (rect[2] - rect[0]) // 2, rect[1] + 10)
             time.sleep(0.3)
-            fg = user32.GetForegroundWindow()
-            buf = _ct.create_unicode_buffer(256)
-            user32.GetWindowTextW(fg, buf, 256)
-            self._log(f"포그라운드 창: {buf.value}")
         else:
             try:
                 state["window"].activate()
@@ -1032,6 +1018,10 @@ class SboardGUI:
         self.root.mainloop()
 
 if __name__ == "__main__":
+    if "--admin-retry" not in sys.argv and not ctypes.windll.shell32.IsUserAnAdmin():
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, "--admin-retry", None, 1)
+        sys.exit(0)
+    sys.argv = [a for a in sys.argv if a != "--admin-retry"]
     update_win = UpdateLogWindow()
     update_win.run()
     time.sleep(0.5)
