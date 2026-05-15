@@ -95,7 +95,7 @@ KEYEVENTF_KEYUP = 0x0002
 API_BASE = "https://sboard-api.sboard-auto-login.workers.dev/api/users"
 API_META = "https://sboard-api.sboard-auto-login.workers.dev/api/meta"
 
-CURRENT_VERSION = "1.2.0"
+CURRENT_VERSION = "1.2.1"
 REPO_OWNER = "c-closed"
 REPO_NAME = "sal"
 
@@ -651,15 +651,18 @@ class SboardGUI:
             launched = False
             for p in exe_paths:
                 if os.path.exists(p):
-                    subprocess.Popen(
-                        [p],
-                        creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
-                        stdin=subprocess.DEVNULL,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL
-                    )
-                    launched = True
-                    break
+                    try:
+                        subprocess.Popen(
+                            [p],
+                            creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+                            stdin=subprocess.DEVNULL,
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL
+                        )
+                        launched = True
+                        break
+                    except OSError as pe:
+                        self._log(f"Sboard 실행 실패: {pe}")
             if not launched:
                 self._log("Sboard 실행 파일을 찾지 못함")
                 self._log("환경변수 SBOARD_EXE_PATH를 설정하거나 실행 파일을 확인하세요.")
@@ -697,16 +700,23 @@ class SboardGUI:
                 if w.title.strip() == "Sboard":
                     state["window_found"] = True
                     state["window"] = w
-                    self._log("로그인 창 발견, 포커스 이동")
+                    self._log("로그인 창 발견")
                     
-                    # PID 저장
+                    # PID 및 HWND 저장
+                    hwnd = None
                     try:
                         hwnd = w._hWnd
                         pid = ctypes.c_ulong()
                         user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
                         self.sboard_pid = pid.value
-                    except Exception as pe:
+                    except Exception:
                         self.sboard_pid = None
+                    
+                    # 창 위치 저장 (클릭 포커스용)
+                    if hwnd:
+                        rect = ctypes.wintypes.RECT()
+                        user32.GetWindowRect(hwnd, ctypes.byref(rect))
+                        state["window_rect"] = (rect.left, rect.top, rect.right, rect.bottom)
                     
                     # 입력 시작
                     self.root.after(100, self._async_input)
@@ -732,14 +742,18 @@ class SboardGUI:
         
         import pyautogui
         
-        # 포커스 이동
-        try:
-            w = state["window"]
-            w.activate()
-            w.focus()
-            time.sleep(0.2)
-        except:
-            pass
+        # 포커스 이동 - 제목 표시줄 클릭 (SendInput, UIPI 우회)
+        rect = state.get("window_rect")
+        if rect:
+            title_x = rect[0] + (rect[2] - rect[0]) // 2
+            title_y = rect[1] + 10
+            pyautogui.click(title_x, title_y)
+            time.sleep(0.3)
+        else:
+            try:
+                state["window"].activate()
+            except:
+                pass
         
         # 탭 이동
         pyautogui.press('tab')
