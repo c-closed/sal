@@ -95,7 +95,7 @@ KEYEVENTF_KEYUP = 0x0002
 API_BASE = "https://sboard-api.sboard-auto-login.workers.dev/api/users"
 API_META = "https://sboard-api.sboard-auto-login.workers.dev/api/meta"
 
-CURRENT_VERSION = "1.1.0"
+CURRENT_VERSION = "1.2.0"
 REPO_OWNER = "c-closed"
 REPO_NAME = "sal"
 
@@ -139,6 +139,10 @@ def _try_set_icon(window):
             window.iconbitmap(path)
         except tk.TclError:
             pass
+
+def _is_hangul(ch: str) -> bool:
+    cp = ord(ch)
+    return (0xAC00 <= cp <= 0xD7A3) or (0x1100 <= cp <= 0x11FF) or (0x3131 <= cp <= 0x318E)
 
 def _center_window(window, width: int, height: int):
     """창을 화면 중앙에 위치"""
@@ -339,6 +343,8 @@ class InputDialog:
         frame.pack()
 
         self.entries = {}
+        vcmd_hangul = self.win.register(lambda p: all(_is_hangul(c) for c in p) if p else True)
+        vcmd_digit = self.win.register(lambda p: p.isdigit() if p else True)
         for i, f in enumerate(fields):
             lbl = ttk.Label(frame, text=f["label"])
             lbl.config(font=("맑은 고딕", 11))
@@ -347,6 +353,10 @@ class InputDialog:
             ent = ttk.Entry(frame, show=show_char)
             ent.grid(row=i, column=1, sticky="ew", padx=(8,0), pady=4)
             ent.config(font=("맑은 고딕", 11))
+            if f["key"] == "name":
+                ent.config(validate="key", validatecommand=(vcmd_hangul, "%P"))
+            elif f["key"] == "uid":
+                ent.config(validate="key", validatecommand=(vcmd_digit, "%P"))
             self.entries[f["key"]] = ent
             self.win.bind("<Return>", lambda e: self.on_ok())
 
@@ -525,6 +535,8 @@ class SboardGUI:
         ttk.Label(frame, text="사용자명", font=("맑은 고딕", 9)).pack(anchor="w")
         
         self.login_entry = ttk.Entry(frame, justify="center", font=("맑은 고딕", 9))
+        vcmd = self.root.register(lambda p: all(_is_hangul(c) for c in p) if p else True)
+        self.login_entry.config(validate="key", validatecommand=(vcmd, "%P"))
         self.login_entry.pack(fill="x", ipady=5, pady=(0,5))
         self.login_entry.bind("<Return>", lambda e: self.do_login())
         
