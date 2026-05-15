@@ -751,10 +751,16 @@ class SboardGUI:
         import pyautogui
         
         # 포커스 이동
+        import ctypes as _ct
+        user32 = _ct.windll.user32
         rect = state.get("window_rect")
         if rect:
             pyautogui.click(rect[0] + (rect[2] - rect[0]) // 2, rect[1] + 10)
             time.sleep(0.3)
+            fg = user32.GetForegroundWindow()
+            buf = _ct.create_unicode_buffer(256)
+            user32.GetWindowTextW(fg, buf, 256)
+            self._log(f"포그라운드 창: {buf.value}")
         else:
             try:
                 state["window"].activate()
