@@ -750,18 +750,18 @@ class SboardGUI:
         
         import pyautogui
         
-        # 포커스 이동 - 제목 표시줄 클릭 (SendInput, UIPI 우회)
+        # 포커스 이동 - SwitchToThisWindow (UIPI 우회)
         rect = state.get("window_rect")
-        if rect:
-            title_x = rect[0] + (rect[2] - rect[0]) // 2
-            title_y = rect[1] + 10
-            pyautogui.click(title_x, title_y)
-            time.sleep(0.3)
-        else:
+        hwnd = getattr(state.get("window"), "_hWnd", None)
+        if hwnd:
             try:
-                state["window"].activate()
+                ctypes.windll.user32.SwitchToThisWindow(hwnd, True)
+                time.sleep(0.3)
             except:
                 pass
+        elif rect:
+            pyautogui.click(rect[0] + (rect[2] - rect[0]) // 2, rect[1] + 10)
+            time.sleep(0.3)
         
         # 탭 이동
         pyautogui.press('tab')
