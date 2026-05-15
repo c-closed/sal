@@ -750,18 +750,16 @@ class SboardGUI:
         
         import pyautogui
         
-        # 포커스 이동 - SwitchToThisWindow (UIPI 우회)
+        # 포커스 이동
         rect = state.get("window_rect")
-        hwnd = getattr(state.get("window"), "_hWnd", None)
-        if hwnd:
-            try:
-                ctypes.windll.user32.SwitchToThisWindow(hwnd, True)
-                time.sleep(0.3)
-            except:
-                pass
-        elif rect:
+        if rect:
             pyautogui.click(rect[0] + (rect[2] - rect[0]) // 2, rect[1] + 10)
             time.sleep(0.3)
+        else:
+            try:
+                state["window"].activate()
+            except:
+                pass
         
         # 탭 이동
         pyautogui.press('tab')
