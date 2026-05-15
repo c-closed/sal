@@ -648,6 +648,7 @@ class SboardGUI:
                 r"C:\Program Files (x86)\sprog\sboard.exe",
                 r"C:\Program Files\sprog\sboard.exe"
             ]
+            shell32 = ctypes.windll.shell32
             launched = False
             for p in exe_paths:
                 if os.path.exists(p):
@@ -662,7 +663,14 @@ class SboardGUI:
                         launched = True
                         break
                     except OSError as pe:
-                        self._log(f"Sboard 실행 실패: {pe}")
+                        self._log(f"Popen 실패, ShellExecute 재시도: {pe}")
+                        try:
+                            ret = shell32.ShellExecuteW(None, "open", p, None, None, 1)
+                            if ret > 32:
+                                launched = True
+                                break
+                        except:
+                            pass
             if not launched:
                 self._log("Sboard 실행 파일을 찾지 못함")
                 self._log("환경변수 SBOARD_EXE_PATH를 설정하거나 실행 파일을 확인하세요.")
