@@ -648,11 +648,9 @@ class SboardGUI:
                 r"C:\Program Files (x86)\sprog\sboard.exe",
                 r"C:\Program Files\sprog\sboard.exe"
             ]
-            shell32 = ctypes.windll.shell32
             launched = False
             for p in exe_paths:
                 if os.path.exists(p):
-                    # 1차: subprocess.Popen (일반 실행)
                     try:
                         subprocess.Popen(
                             [p],
@@ -664,20 +662,10 @@ class SboardGUI:
                         launched = True
                         break
                     except OSError as pe:
-                        # 2차: ShellExecute open (더블클릭 우회)
-                        self._log(f"Popen 실패, ShellExecute 시도...")
-                        try:
-                            ret = shell32.ShellExecuteW(None, "open", p, None, None, 1)
-                            if ret > 32:
-                                launched = True
-                                break
-                        except:
-                            pass
-                        # 3차: ShellExecute runas (UAC 권한 상승)
                         if getattr(pe, 'winerror', None) == 740:
-                            self._log("관리자 권한 요청 (UAC)...")
+                            self._log("관리자 권한 요청...")
                             try:
-                                ret = shell32.ShellExecuteW(None, "runas", p, None, None, 1)
+                                ret = ctypes.windll.shell32.ShellExecuteW(None, "runas", p, None, None, 1)
                                 if ret > 32:
                                     launched = True
                                     break
