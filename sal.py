@@ -29,7 +29,6 @@ import faulthandler
 faulthandler.enable()
 
 from datetime import datetime
-from typing import Optional
 
 # 전역 예외 처리기 (모든 스레드에서 발생하는 예외 잡기)
 def global_excepthook(exc_type, exc_value, exc_traceback):
@@ -95,8 +94,6 @@ KEYEVENTF_KEYUP = 0x0002
 API_BASE = "https://sboard-api.sboard-auto-login.workers.dev/api/users"
 API_META = "https://sboard-api.sboard-auto-login.workers.dev/api/meta"
 
-REPO_OWNER = "c-closed"
-REPO_NAME = "sal"
 
 # =========================
 # 유틸 함수
@@ -223,24 +220,6 @@ class VersionManager:
     @staticmethod
     def is_newer(current: str, latest: str) -> bool:
         return VersionManager.parse_version(latest) > VersionManager.parse_version(current)
-
-
-class GitHubAPIClient:
-    # Return values:
-    #   dict -> release found
-    #   None -> connection/network error
-    #   {}   -> no releases yet (404)
-    def get_latest_release(self, owner: str, repo: str) -> Optional[dict]:
-        api_url = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
-        try:
-            import requests
-            resp = requests.get(api_url, timeout=10)
-            if resp.status_code == 404:
-                return {}  # No releases yet (non-fatal)
-            resp.raise_for_status()
-            return resp.json()
-        except:
-            return None  # Connection error
 
 
 # =========================
@@ -441,27 +420,32 @@ class UpdateLogWindow:
     def _worker(self):
         try:
             self._log("서버에 연결중")
-            client = GitHubAPIClient()
-            data = client.get_latest_release(REPO_OWNER, REPO_NAME)
-            if data is None:
-                self._log("서버에 연결할 수 없습니다.")
-                time.sleep(1.5)
-                self.should_launch = False
-                self._done = True
-                return
-            if not data:
-                self._log("저장소에 릴리스가 없습니다.")
+            import requests
+            resp = requests.get(API_META, timeout=10)
+            resp.raise_for_status()
+            meta = resp.json()
+            if not meta:
+                self._log("서버 응답 없음")
                 time.sleep(1)
                 self.should_launch = True
                 self._done = True
                 return
 
             self._log("서버에 연결되었습니다.")
-            latest_ver = data.get("tag_name", "v0.0.0")
+            latest_ver = (meta.get("update_version") or "").strip()
+            if not latest_ver:
+                self._log("업데이트 정보가 없습니다.")
+                time.sleep(1)
+                self.should_launch = True
+                self._done = True
+                return
+
+            latest_ver = "v" + latest_ver.lstrip("v")
             self._log(f"최신버전 : {latest_ver}")
             current_ver = _get_installed_version()
             self._log(f"현재버전 : v{current_ver}")
             time.sleep(0.5)
+
             if not VersionManager.is_newer(current_ver, latest_ver):
                 self._log("최신버전입니다.")
                 time.sleep(0.5)
@@ -470,10 +454,50 @@ class UpdateLogWindow:
                     time.sleep(1)
                 self.should_launch = True
             else:
-                self._log("업데이트를 시작합니다.")
+                self._log("새 버전 다운로드 중...")
+                dl_url = meta.get("update_url", "")
+                expected_sha = (meta.get("update_sha256") or "").lower()
+                if not dl_url or not expected_sha:
+                    self._log("다운로드 정보가 불완전합니다.")
+                    time.sleep(1.5)
+                    self.should_launch = True
+                    self._done = True
+                    return
+                import urllib.request
+                import hashlib
+                import shutil
+                import tempfile
+                import os
+                tmp = os.path.join(tempfile.gettempdir(), "Sboard_Setup.exe")
+                try:
+                    urllib.request.urlretrieve(dl_url, tmp)
+                except Exception:
+                    self._log("다운로드 실패. 브라우저를 엽니다.")
+                    time.sleep(0.5)
+                    import webbrowser
+                    webbrowser.open(dl_url)
+                    self.should_launch = False
+                    self._done = True
+                    return
+                actual_sha = hashlib.sha256()
+                with open(tmp, "rb") as f:
+                    while True:
+                        chunk = f.read(65536)
+                        if not chunk:
+                            break
+                        actual_sha.update(chunk)
+                if actual_sha.hexdigest() != expected_sha:
+                    self._log("SHA256 불일치 - 설치 파일이 손상되었습니다.")
+                    os.remove(tmp)
+                    time.sleep(1.5)
+                    self.should_launch = True
+                    self._done = True
+                    return
+                self._log("SHA256 검증 완료. 설치를 시작합니다.")
                 time.sleep(0.5)
-                import webbrowser
-                webbrowser.open(data.get("html_url", ""))
+                subprocess.Popen([tmp, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/ALLUSERS"],
+                                 creationflags=subprocess.DETACHED_PROCESS)
+                time.sleep(0.5)
                 self.should_launch = False
         except Exception as e:
             self._log(f"오류: {e}")

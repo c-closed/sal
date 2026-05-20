@@ -45,7 +45,7 @@ export default {
 
     // 라우팅: GET /api/meta
     if (path === '/api/meta' && method === 'GET') {
-      return handleGetMeta(env.DB, corsHeaders);
+      return handleGetMeta(env, corsHeaders);
     }
 
     // 404 Not Found
@@ -119,11 +119,16 @@ async function handleDeleteUser(username, DB, corsHeaders) {
 }
 
 // ----------------------------------------
-// GET /api/meta  →  메타정보 반환
-// ----------------------------------------
-async function handleGetMeta(DB, corsHeaders) {
-  const { count } = await DB.prepare('SELECT COUNT(*) as count FROM users').first();
-  return jsonResponse({ last_updated: getLastUpdated(), total_users: count }, corsHeaders);
+// GET /api/meta  →  메타정보 + 업데이트 정보 반환
+async function handleGetMeta(env, corsHeaders) {
+  const { count } = await env.DB.prepare('SELECT COUNT(*) as count FROM users').first();
+  return jsonResponse({
+    last_updated: getLastUpdated(),
+    total_users: count,
+    update_version: env.UPDATE_VERSION || '',
+    update_sha256: env.UPDATE_SHA256 || '',
+    update_url: env.UPDATE_URL || '',
+  }, corsHeaders);
 }
 
 // ----------------------------------------
