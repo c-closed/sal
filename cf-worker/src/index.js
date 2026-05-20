@@ -119,15 +119,24 @@ async function handleDeleteUser(username, DB, corsHeaders) {
 }
 
 // ----------------------------------------
+// ========================================
+// 업데이트 정보 (릴리스 시 함께 수정)
+// ========================================
+const UPDATE_INFO = {
+  version: '2.0.0',
+  sha256: '84ef8de8cef3599a3ab24509c4b8219cc48c37cd69540f400e7166fa46414bd1',
+  url: 'https://github.com/c-closed/sal/releases/download/v2.0.0/Sboard_Setup.exe',
+};
+
 // GET /api/meta  →  메타정보 + 업데이트 정보 반환
 async function handleGetMeta(env, corsHeaders) {
   const { count } = await env.DB.prepare('SELECT COUNT(*) as count FROM users').first();
   return jsonResponse({
     last_updated: getLastUpdated(),
     total_users: count,
-    update_version: env.UPDATE_VERSION || '',
-    update_sha256: env.UPDATE_SHA256 || '',
-    update_url: env.UPDATE_URL || '',
+    update_version: UPDATE_INFO.version,
+    update_sha256: UPDATE_INFO.sha256,
+    update_url: UPDATE_INFO.url,
   }, corsHeaders);
 }
 
