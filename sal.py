@@ -518,7 +518,6 @@ class SboardGUI:
         
         # 상단 메뉴바
         menubar = tk.Menu(self.root, tearoff=0)
-        menubar.add_command(label="사용자 목록", command=self.show_users_list)
         
         manage_menu = tk.Menu(menubar, tearoff=0)
         manage_menu.add_command(label="사용자 등록", command=lambda: self._register_action(self.root))
