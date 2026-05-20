@@ -543,14 +543,32 @@ class SboardGUI:
         self.login_btn = ttk.Button(frame, text="로그인", command=self.do_login)
         self.login_btn.pack(fill="x", ipady=3)
         
-        # Size to content
+        # 사용자 목록 (트리뷰)
+        list_frame = ttk.LabelFrame(self.root, text="사용자 목록 (더블클릭 로그인)", padding=(15, 12, 15, 8))
+        list_frame.pack(fill="both", expand=True, padx=8, pady=(0, 8))
+        
+        self.user_tree = ttk.Treeview(list_frame, columns=("name", "id"), show="headings", height=6)
+        self.user_tree.heading("name", text="이름")
+        self.user_tree.heading("id", text="ID")
+        self.user_tree.column("name", width=120, anchor="center")
+        self.user_tree.column("id", width=120, anchor="center")
+        style = ttk.Style()
+        style.configure("Treeview", rowheight=28, font=("맑은 고딕", 11))
+        style.configure("Treeview.Heading", font=("맑은 고딕", 11, "bold"))
+        self.user_tree.pack(fill="both", expand=True)
+        self.user_tree.bind("<Double-1>", self._on_tree_doubleclick)
+        
+        # Size to content + 고정폭 보장
         self.root.update_idletasks()
-        w = max(300, self.root.winfo_reqwidth())
-        h = self.root.winfo_reqheight()
+        w = max(310, self.root.winfo_reqwidth())
+        h = max(380, self.root.winfo_reqheight())
         ws = self.root.winfo_screenwidth()
         hs = self.root.winfo_screenheight()
         self.root.geometry(f"{w}x{h}+{(ws - w) // 2}+{(hs - h) // 2}")
         self.login_entry.focus()
+        
+        # 사용자 목록 로드
+        threading.Thread(target=self._load_user_tree, daemon=True).start()
     
     def _poll_queues(self):
         """메인 스레드에서 로그 큐와 Tkinter 작업 큐를 폴링"""
@@ -582,6 +600,32 @@ class SboardGUI:
         self.login_btn.config(state=state)
         self.login_entry.config(state=state)
     
+    def _load_user_tree(self):
+        try:
+            data = self.api.get_users()
+            users = data.get("users", data)
+            self.users_cache = users
+            self._tk_task_queue.put(lambda: self._refresh_user_tree())
+        except:
+            pass
+    
+    def _refresh_user_tree(self):
+        self.user_tree.delete(*self.user_tree.get_children())
+        for name in sorted(self.users_cache.keys()):
+            uid = self.users_cache[name].get("id", "")
+            self.user_tree.insert("", "end", values=(name, uid))
+    
+    def _on_tree_doubleclick(self, event):
+        sel = self.user_tree.selection()
+        if not sel:
+            return
+        item = self.user_tree.item(sel[0])
+        values = item["values"]
+        if values:
+            self.login_entry.delete(0, tk.END)
+            self.login_entry.insert(0, values[0])
+            self.do_login()
+
     def do_login(self):
         username = self.login_entry.get().strip()
         if not re.fullmatch(r"^[가-힣]+$", username):
@@ -944,6 +988,7 @@ class SboardGUI:
                 self.api.create_user(res["name"], res["uid"], res["pw"])
                 messagebox.showinfo("성공", "등록 완료!", parent=parent)
                 self.users_cache.clear()
+                threading.Thread(target=self._load_user_tree, daemon=True).start()
             except Exception as e:
                 messagebox.showerror("오류", str(e), parent=parent)
     
@@ -984,6 +1029,7 @@ class SboardGUI:
             self.api.update_user_pw_only(name, uid, res2["new_pw"])
             messagebox.showinfo("성공", "변경 완료!", parent=parent)
             self.users_cache.clear()
+            threading.Thread(target=self._load_user_tree, daemon=True).start()
         except Exception as e:
             messagebox.showerror("오류", str(e), parent=parent)
     
@@ -1008,6 +1054,7 @@ class SboardGUI:
                     self.api.delete_user(res["name"])
                     messagebox.showinfo("성공", "삭제 완료!", parent=parent)
                     self.users_cache.clear()
+                    threading.Thread(target=self._load_user_tree, daemon=True).start()
                 except Exception as e:
                     messagebox.showerror("오류", str(e), parent=parent)
     
