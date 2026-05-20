@@ -950,6 +950,8 @@ class SboardGUI:
         list_win.bind("<Escape>", lambda e: list_win.destroy())
         
         def _on_success(items):
+            if not tree.winfo_exists():
+                return
             loading_label.pack_forget()
             tree.pack(fill="both", expand=True, padx=8, pady=8)
             tree.delete(*tree.get_children())
@@ -957,6 +959,8 @@ class SboardGUI:
                 tree.insert("", "end", values=(name, uid))
         
         def _on_failure(error_msg):
+            if not loading_label.winfo_exists():
+                return
             loading_label.config(text=f"오류: {error_msg}", foreground="red")
         
         def _do_fetch():
