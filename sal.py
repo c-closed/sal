@@ -543,6 +543,9 @@ class SboardGUI:
         list_frame = ttk.LabelFrame(self.root, text="사용자 목록 (더블클릭 로그인)", padding=(15, 12, 15, 8))
         list_frame.pack(fill="both", expand=True, padx=8, pady=(0, 8))
         
+        self._tree_loading = ttk.Label(list_frame, text="불러오는 중입니다...", font=("맑은 고딕", 11), anchor="center")
+        self._tree_loading.pack(expand=True)
+        
         self.user_tree = ttk.Treeview(list_frame, columns=("name", "id"), show="headings", height=6)
         self.user_tree.heading("name", text="이름")
         self.user_tree.heading("id", text="ID")
@@ -551,7 +554,6 @@ class SboardGUI:
         style = ttk.Style()
         style.configure("Treeview", rowheight=28, font=("맑은 고딕", 11))
         style.configure("Treeview.Heading", font=("맑은 고딕", 11, "bold"))
-        self.user_tree.pack(fill="both", expand=True)
         self.user_tree.bind("<Double-1>", self._on_tree_doubleclick)
         
         # Size to content + 고정폭 보장
@@ -607,6 +609,10 @@ class SboardGUI:
             pass
     
     def _refresh_user_tree(self):
+        if not self.user_tree.winfo_exists():
+            return
+        self._tree_loading.pack_forget()
+        self.user_tree.pack(fill="both", expand=True)
         self.user_tree.delete(*self.user_tree.get_children())
         for name in sorted(self.users_cache.keys()):
             uid = self.users_cache[name].get("id", "")
