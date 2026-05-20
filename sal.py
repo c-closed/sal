@@ -516,17 +516,6 @@ class SboardGUI:
         # 로그 큐 폴링 타이머 시작
         self._poll_queues()
         
-        # 상단 메뉴바
-        menubar = tk.Menu(self.root, tearoff=0)
-        
-        manage_menu = tk.Menu(menubar, tearoff=0)
-        manage_menu.add_command(label="사용자 등록", command=lambda: self._register_action(self.root))
-        manage_menu.add_command(label="PW 변경", command=lambda: self._change_pw_action(self.root))
-        manage_menu.add_command(label="사용자 삭제", command=lambda: self._delete_action(self.root))
-        menubar.add_cascade(label="사용자 관리", menu=manage_menu)
-        
-        self.root.config(menu=menubar)
-        
         # 메인 프레임
         frame = ttk.LabelFrame(self.root, text="자동 로그인", padding=(15, 12, 15, 8))
         frame.pack(fill="x", padx=8, pady=(8, 5))
@@ -539,8 +528,16 @@ class SboardGUI:
         self.login_entry.pack(fill="x", ipady=5, pady=(0,5))
         self.login_entry.bind("<Return>", lambda e: self.do_login())
         
-        self.login_btn = ttk.Button(frame, text="로그인", command=self.do_login)
-        self.login_btn.pack(fill="x", ipady=3)
+        btn_frame = ttk.Frame(frame)
+        btn_frame.pack(fill="x")
+        btn_frame.columnconfigure(0, weight=1)
+        btn_frame.columnconfigure(1, weight=1)
+        
+        self.login_btn = ttk.Button(btn_frame, text="로그인", command=self.do_login)
+        self.login_btn.grid(row=0, column=0, sticky="ew", ipady=3, padx=(0, 2))
+        
+        self.manage_btn = ttk.Button(btn_frame, text="사용자 관리", command=self._show_manage_window)
+        self.manage_btn.grid(row=0, column=1, sticky="ew", ipady=3, padx=(2, 0))
         
         # 사용자 목록 (트리뷰)
         list_frame = ttk.LabelFrame(self.root, text="사용자 목록 (더블클릭 로그인)", padding=(15, 12, 15, 8))
@@ -597,6 +594,7 @@ class SboardGUI:
         self._busy = busy
         state = "disabled" if busy else "normal"
         self.login_btn.config(state=state)
+        self.manage_btn.config(state=state)
         self.login_entry.config(state=state)
     
     def _load_user_tree(self):
@@ -624,6 +622,31 @@ class SboardGUI:
             self.login_entry.delete(0, tk.END)
             self.login_entry.insert(0, values[0])
             self.do_login()
+
+    def _show_manage_window(self):
+        win = tk.Toplevel(self.root)
+        win.title("사용자 관리")
+        win.transient(self.root)
+        _try_set_icon(win)
+        win.resizable(False, False)
+        win.bind("<Escape>", lambda e: win.destroy())
+        
+        frame = ttk.Frame(win, padding=(15, 12, 15, 12))
+        frame.pack()
+        
+        ttk.Button(frame, text="사용자 등록", command=lambda: (win.destroy(), self._register_action(self.root)))\
+            .pack(fill="x", ipady=5, pady=(0, 6))
+        ttk.Button(frame, text="PW 변경", command=lambda: (win.destroy(), self._change_pw_action(self.root)))\
+            .pack(fill="x", ipady=5, pady=(0, 6))
+        ttk.Button(frame, text="사용자 삭제", command=lambda: (win.destroy(), self._delete_action(self.root)))\
+            .pack(fill="x", ipady=5)
+        
+        win.update_idletasks()
+        w = max(180, win.winfo_reqwidth())
+        h = win.winfo_reqheight()
+        ws = win.winfo_screenwidth()
+        hs = win.winfo_screenheight()
+        win.geometry(f"{w}x{h}+{(ws - w) // 2}+{(hs - h) // 2}")
 
     def do_login(self):
         username = self.login_entry.get().strip()
