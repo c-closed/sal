@@ -8,29 +8,29 @@ export default {
     const path = url.pathname;
     const method = request.method;
 
-    // CORS 헤더 (모든 응답에 포함)
+    // CORS ?�더 (모든 ?�답???�함)
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     };
 
-    // OPTIONS 프리플라이트 요청 처리
+    // OPTIONS ?�리?�라?�트 ?�청 처리
     if (method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders, status: 204 });
     }
 
-    // 라우팅: GET /api/users
+    // ?�우?? GET /api/users
     if (path === '/api/users' && method === 'GET') {
       return handleGetUsers(env.DB, corsHeaders);
     }
 
-    // 라우팅: POST /api/users
+    // ?�우?? POST /api/users
     if (path === '/api/users' && method === 'POST') {
       return handleCreateUser(request, env.DB, corsHeaders);
     }
 
-    // 라우팅: PUT /api/users/{username}  또는  DELETE /api/users/{username}
+    // ?�우?? PUT /api/users/{username}  ?�는  DELETE /api/users/{username}
     const userMatch = path.match(/^\/api\/users\/(.+)$/);
     if (userMatch) {
       const username = decodeURIComponent(userMatch[1]);
@@ -43,7 +43,7 @@ export default {
       }
     }
 
-    // 라우팅: GET /api/meta
+    // ?�우?? GET /api/meta
     if (path === '/api/meta' && method === 'GET') {
       return handleGetMeta(env, corsHeaders);
     }
@@ -57,7 +57,7 @@ export default {
 };
 
 // ----------------------------------------
-// GET /api/users  →  전체 사용자 목록 반환
+// GET /api/users  ?? ?�체 ?�용??목록 반환
 // ----------------------------------------
 async function handleGetUsers(DB, corsHeaders) {
   const { results } = await DB.prepare(
@@ -73,15 +73,15 @@ async function handleGetUsers(DB, corsHeaders) {
 }
 
 // ----------------------------------------
-// POST /api/users  →  새 사용자 등록
-// Body: { username: "홍길동", id: "123", pw: "456" }
+// POST /api/users  ?? ???�용???�록
+// Body: { username: "?�길??, id: "123", pw: "456" }
 // ----------------------------------------
 async function handleCreateUser(request, DB, corsHeaders) {
   const body = await request.json();
   const { username, id, pw } = body;
 
   if (!username || !id || !pw) {
-    return jsonError('username, id, pw 모두 필요합니다.', { status: 400, headers: corsHeaders });
+    return jsonError('username, id, pw 모두 ?�요?�니??', { status: 400, headers: corsHeaders });
   }
 
   const { success } = await DB.prepare(
@@ -92,15 +92,14 @@ async function handleCreateUser(request, DB, corsHeaders) {
 }
 
 // ----------------------------------------
-// PUT /api/users/{username}  →  사용자 정보(PW) 변경
-// Body: { id: "123", pw: "789" }
+// PUT /api/users/{username}  ?? ?�용???�보(PW) 변�?// Body: { id: "123", pw: "789" }
 // ----------------------------------------
 async function handleUpdateUser(username, request, DB, corsHeaders) {
   const body = await request.json();
   const { id, pw } = body;
 
   if (!id || !pw) {
-    return jsonError('id, pw 모두 필요합니다.', { status: 400, headers: corsHeaders });
+    return jsonError('id, pw 모두 ?�요?�니??', { status: 400, headers: corsHeaders });
   }
 
   await DB.prepare(
@@ -111,7 +110,7 @@ async function handleUpdateUser(username, request, DB, corsHeaders) {
 }
 
 // ----------------------------------------
-// DELETE /api/users/{username}  →  사용자 삭제
+// DELETE /api/users/{username}  ?? ?�용????��
 // ----------------------------------------
 async function handleDeleteUser(username, DB, corsHeaders) {
   await DB.prepare('DELETE FROM users WHERE username = ?').bind(username).run();
@@ -120,15 +119,15 @@ async function handleDeleteUser(username, DB, corsHeaders) {
 
 // ----------------------------------------
 // ========================================
-// 업데이트 정보 (릴리스 시 함께 수정)
+// ?�데?�트 ?�보 (릴리?????�께 ?�정)
 // ========================================
 const UPDATE_INFO = {
   version: '2.0.0',
-  sha256: 'a454f2add7b2bb6087873f122685374787898a2fd0eb46a60f078e81a35a2503',
+  sha256: 'e139ef15420e32dae507d381e5ed2024f7e8c19801aa5967c2ebe6bc8ddbf8de',
   url: 'https://github.com/c-closed/sal/releases/download/v2.0.0/Sboard_Setup.exe',
 };
 
-// GET /api/meta  →  메타정보 + 업데이트 정보 반환
+// GET /api/meta  ?? 메�??�보 + ?�데?�트 ?�보 반환
 async function handleGetMeta(env, corsHeaders) {
   const { count } = await env.DB.prepare('SELECT COUNT(*) as count FROM users').first();
   return jsonResponse({
@@ -141,8 +140,7 @@ async function handleGetMeta(env, corsHeaders) {
 }
 
 // ----------------------------------------
-// 헬퍼 함수들
-// ----------------------------------------
+// ?�퍼 ?�수??// ----------------------------------------
 function getLastUpdated() {
   const now = new Date();
   const opts = { timeZone: 'Asia/Seoul', hour12: false };
@@ -153,7 +151,7 @@ function getLastUpdated() {
   }).formatToParts(now);
 
   const v = (type) => (parts.find(p => p.type === type) || {}).value || '';
-  return `${v('year')}.${v('month')}.${v('day')} ${v('hour')}:${v('minute')}:${v('second')} 기준`;
+  return `${v('year')}.${v('month')}.${v('day')} ${v('hour')}:${v('minute')}:${v('second')} 기�?`;
 }
 
 function jsonResponse(data, options = {}) {
