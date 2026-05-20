@@ -124,7 +124,7 @@ async function handleDeleteUser(username, DB, corsHeaders) {
 // ========================================
 const UPDATE_INFO = {
   version: '2.0.0',
-  sha256: '84ef8de8cef3599a3ab24509c4b8219cc48c37cd69540f400e7166fa46414bd1',
+  sha256: '6a3e537ed3a34c16055c9b4f930db9470aa944f0fafa7bd845ab1aace9358a8b',
   url: 'https://github.com/c-closed/sal/releases/download/v2.0.0/Sboard_Setup.exe',
 };
 
