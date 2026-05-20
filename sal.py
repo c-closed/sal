@@ -95,7 +95,6 @@ KEYEVENTF_KEYUP = 0x0002
 API_BASE = "https://sboard-api.sboard-auto-login.workers.dev/api/users"
 API_META = "https://sboard-api.sboard-auto-login.workers.dev/api/meta"
 
-CURRENT_VERSION = "1.2.1"
 REPO_OWNER = "c-closed"
 REPO_NAME = "sal"
 
@@ -117,7 +116,7 @@ def _get_installed_version() -> str:
             return version
         except (FileNotFoundError, OSError):
             continue
-    return CURRENT_VERSION
+    return "0.0.0"
 
 def _get_icon_path() -> str:
     apd = os.environ.get("LOCALAPPDATA") or os.environ.get("APPDATA") or os.path.expanduser("~")
