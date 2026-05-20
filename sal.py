@@ -401,7 +401,8 @@ class UpdateLogWindow:
 
     def _poll(self):
         if self._done:
-            self.root.quit()
+            if self.should_launch:
+                self.root.quit()
         else:
             self.root.after(200, self._poll)
 
@@ -427,7 +428,7 @@ class UpdateLogWindow:
             if not meta:
                 self._log("서버 응답 없음")
                 time.sleep(1)
-                self.should_launch = True
+                self.should_launch = False
                 self._done = True
                 return
 
@@ -436,7 +437,7 @@ class UpdateLogWindow:
             if not latest_ver:
                 self._log("업데이트 정보가 없습니다.")
                 time.sleep(1)
-                self.should_launch = True
+                self.should_launch = False
                 self._done = True
                 return
 
@@ -446,63 +447,62 @@ class UpdateLogWindow:
             self._log(f"현재버전 : v{current_ver}")
             time.sleep(0.5)
 
-            if not VersionManager.is_newer(current_ver, latest_ver):
-                self._log("최신버전입니다.")
-                time.sleep(0.5)
-                for i in range(3, 0, -1):
-                    self._log(f"{i}초 후 프로그램이 시작됩니다.")
-                    time.sleep(1)
-                self.should_launch = True
-            else:
+            if VersionManager.is_newer(current_ver, latest_ver):
                 self._log("새 버전 다운로드 중...")
                 dl_url = meta.get("update_url", "")
-                expected_sha = (meta.get("update_sha256") or "").lower()
-                if not dl_url or not expected_sha:
-                    self._log("다운로드 정보가 불완전합니다.")
+                if not dl_url:
+                    self._log("다운로드 정보가 없습니다.")
                     time.sleep(1.5)
-                    self.should_launch = True
+                    self.should_launch = False
                     self._done = True
                     return
-                import urllib.request
-                import hashlib
-                import shutil
-                import tempfile
-                import os
+                import urllib.request, tempfile, os
                 tmp = os.path.join(tempfile.gettempdir(), "Sboard_Setup.exe")
                 try:
                     urllib.request.urlretrieve(dl_url, tmp)
+                    self._log("다운로드 완료. 설치를 시작합니다.")
+                    time.sleep(0.5)
+                    subprocess.Popen([tmp, "/ALLUSERS"])
                 except Exception:
                     self._log("다운로드 실패. 브라우저를 엽니다.")
                     time.sleep(0.5)
                     import webbrowser
                     webbrowser.open(dl_url)
-                    self.should_launch = False
-                    self._done = True
-                    return
-                actual_sha = hashlib.sha256()
-                with open(tmp, "rb") as f:
-                    while True:
-                        chunk = f.read(65536)
-                        if not chunk:
-                            break
-                        actual_sha.update(chunk)
-                if actual_sha.hexdigest() != expected_sha:
-                    self._log("SHA256 불일치 - 설치 파일이 손상되었습니다.")
-                    os.remove(tmp)
-                    time.sleep(1.5)
-                    self.should_launch = True
-                    self._done = True
-                    return
-                self._log("SHA256 검증 완료. 설치를 시작합니다.")
-                time.sleep(0.5)
-                subprocess.Popen([tmp, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/ALLUSERS"],
-                                 creationflags=subprocess.DETACHED_PROCESS)
-                time.sleep(0.5)
                 self.should_launch = False
+            else:
+                self._log("최신버전입니다. 파일 위변조 확인을 시작합니다.")
+                expected_sha = (meta.get("update_sha256") or "").lower()
+                if expected_sha:
+                    import hashlib
+                    exe_path = sys.executable if getattr(sys, 'frozen', False) else __file__
+                    try:
+                        actual_sha = hashlib.sha256()
+                        with open(exe_path, "rb") as f:
+                            while True:
+                                chunk = f.read(65536)
+                                if not chunk:
+                                    break
+                                actual_sha.update(chunk)
+                        if actual_sha.hexdigest() != expected_sha:
+                            self._log("파일이 위변조되었습니다. 다시 설치해주세요.")
+                            time.sleep(2)
+                            self.should_launch = False
+                            self._done = True
+                            return
+                        self._log("파일 이상 없음.")
+                    except:
+                        self._log("파일 검증 불가.")
+                else:
+                    self._log("검증 정보 없음.")
+                time.sleep(0.5)
+                for i in range(3, 0, -1):
+                    self._log(f"{i}초 후 프로그램이 시작됩니다.")
+                    time.sleep(1)
+                self.should_launch = True
         except Exception as e:
             self._log(f"오류: {e}")
             time.sleep(1.5)
-            self.should_launch = True
+            self.should_launch = False
         finally:
             self._done = True
 
