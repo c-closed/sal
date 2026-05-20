@@ -122,9 +122,9 @@ async function handleDeleteUser(username, DB, corsHeaders) {
 // 업데이트 정보 (릴리스 시 함께 수정)
 // ========================================
 const UPDATE_INFO = {
-  version: '2.0.0',
-  sha256: 'e139ef15420e32dae507d381e5ed2024f7e8c19801aa5967c2ebe6bc8ddbf8de',
-  url: 'https://github.com/c-closed/sal/releases/download/v2.0.0/Sboard_Setup.exe',
+  version: '2.1.0',
+  sha256: '792e5799b0624ef28135971070f1866d7027fa3cd465a934d1e008e8c19838bd',
+  url: 'https://github.com/c-closed/sal/releases/download/v2.1.0/Sboard_Setup.exe',
 };
 
 // GET /api/meta  →  메타정보 + 업데이트 정보 반환

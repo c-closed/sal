@@ -4,7 +4,7 @@ a = Analysis(
     ['sal.py'],
     pathex=[],
     binaries=[],
-    datas=[('icon.ico', '.')],
+    datas=[('icon.ico', '.'), ('updater.exe', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

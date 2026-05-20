@@ -4,7 +4,7 @@
 ;   2. iscc "Sboard 접속기.iss"                   (Setup 파일 생성)
 
 #define MyAppName "Sboard 접속기"
-#define MyAppVersion "2.0.0"
+#define MyAppVersion "2.1.0"
 #define MyAppPublisher "류호준"
 #define MyAppURL "https://github.com/c-closed/sal"
 #define MyAppExeName "Sboard 접속기.exe"
@@ -41,6 +41,7 @@ Name: "desktopicon"; Description: "바탕 화면에 바로 가기 만들기"; Gr
 
 [Files]
 Source: "dist\{#MyAppName}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+Source: "dist\updater.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "icon.ico"; DestDir: "{localappdata}\{#MyAppName}"; Flags: ignoreversion
 Source: "icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 

@@ -460,15 +460,29 @@ class UpdateLogWindow:
                 tmp = os.path.join(tempfile.gettempdir(), "Sboard_Setup.exe")
                 try:
                     urllib.request.urlretrieve(dl_url, tmp)
-                    self._log("다운로드 완료. 설치를 시작합니다.")
-                    time.sleep(0.5)
-                    subprocess.Popen([tmp, "/ALLUSERS"])
+                    self._log("다운로드 완료.")
                 except Exception:
                     self._log("다운로드 실패. 브라우저를 엽니다.")
                     time.sleep(0.5)
                     import webbrowser
                     webbrowser.open(dl_url)
+                    self.should_launch = False
+                    self._done = True
+                    return
+                app_dir = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__))
+                updater = os.path.join(app_dir, "updater.exe")
+                if not os.path.exists(updater):
+                    updater = os.path.join(app_dir, "_internal", "updater.exe")
+                if os.path.exists(updater):
+                    self._log("업데이터를 실행합니다.")
+                    time.sleep(0.3)
+                    subprocess.Popen([updater, tmp, app_dir, "Sboard 접속기.exe", str(os.getpid())])
+                else:
+                    self._log("업데이터를 찾지 못함. 설치 프로그램을 실행합니다.")
+                    time.sleep(0.3)
+                    subprocess.Popen([tmp, "/ALLUSERS"])
                 self.should_launch = False
+                self._done = True
             else:
                 self._log("최신버전입니다. 파일 위변조 확인을 시작합니다.")
                 expected_sha = (meta.get("update_sha256") or "").lower()
@@ -484,8 +498,25 @@ class UpdateLogWindow:
                                     break
                                 actual_sha.update(chunk)
                         if actual_sha.hexdigest() != expected_sha:
-                            self._log("파일이 위변조되었습니다. 다시 설치해주세요.")
-                            time.sleep(2)
+                            self._log("파일이 위변조되었습니다. 강제 재설치를 시작합니다.")
+                            dl_url = meta.get("update_url", "")
+                            if dl_url:
+                                import urllib.request, tempfile, os
+                                tmp = os.path.join(tempfile.gettempdir(), "Sboard_Setup.exe")
+                                try:
+                                    urllib.request.urlretrieve(dl_url, tmp)
+                                    self._log("재설치 파일 다운로드 완료.")
+                                    time.sleep(0.5)
+                                    subprocess.Popen([tmp, "/ALLUSERS"])
+                                    self.should_launch = False
+                                    self._done = True
+                                    return
+                                except:
+                                    self._log("재설치 파일 다운로드 실패.")
+                            self._log("위변조 탐지. 브라우저를 엽니다.")
+                            time.sleep(0.5)
+                            import webbrowser
+                            webbrowser.open(dl_url)
                             self.should_launch = False
                             self._done = True
                             return
