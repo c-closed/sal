@@ -333,8 +333,8 @@ public partial class MainForm : Form
             var btn = new Button
             {
                 Text = text,
-                Dock = DockStyle.Fill,
                 Height = 28,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
                 Margin = new Padding(0, 0, 0, 6),
                 FlatStyle = FlatStyle.Flat,
                 FlatAppearance = { BorderSize = 0 },
