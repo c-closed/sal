@@ -34,12 +34,13 @@ public partial class InputDialog : Form
             row++;
         }
 
-        _btnOk = new Button { Text = "확인", DialogResult = DialogResult.OK, Dock = DockStyle.Fill };
-        var btnCancel = new Button { Text = "취소", DialogResult = DialogResult.Cancel, Dock = DockStyle.Fill };
+        _btnOk = new Button { Text = "확인", DialogResult = DialogResult.OK, Height = 28, Dock = DockStyle.Fill };
+        var btnCancel = new Button { Text = "취소", DialogResult = DialogResult.Cancel, Height = 28, Dock = DockStyle.Fill };
         _btnOk.Click += (_, _) => _ok = true;
         var btnPanel = new TableLayoutPanel
         {
-            Dock = DockStyle.Fill,
+            Height = 28,
+            Dock = DockStyle.Top,
             ColumnCount = 2,
             RowCount = 1,
             Margin = new Padding(0)

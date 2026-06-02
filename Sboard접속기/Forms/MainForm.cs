@@ -144,6 +144,7 @@ public partial class MainForm : Form
         foreach (var kv in _users.OrderBy(x => x.Key))
             dt.Rows.Add(kv.Key, kv.Value.Id);
         dgvUsers.DataSource = dt;
+        gbUsers.Text = $"사용자 목록 ({_users.Count}명)";
     }
 
     private void BtnLogin_Click(object? sender, EventArgs e)

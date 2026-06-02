@@ -22,9 +22,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>3.2.0.0</Version>
-    <ApplicationVersion>3.2.0.0</ApplicationVersion>
-    <ApplicationDisplayVersion>3.2.0</ApplicationDisplayVersion>
+    <Version>3.3.0.0</Version>
+    <ApplicationVersion>3.3.0.0</ApplicationVersion>
+    <ApplicationDisplayVersion>3.3.0</ApplicationDisplayVersion>
   </PropertyGroup>
 
 </Project>
