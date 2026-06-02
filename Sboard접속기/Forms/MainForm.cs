@@ -77,7 +77,7 @@ public partial class MainForm : Form
         dgvUsers.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(245, 247, 250);
         dgvUsers.RowsDefaultCellStyle.BackColor = Color.White;
         dgvUsers.RowsDefaultCellStyle.ForeColor = Color.FromArgb(52, 73, 94);
-        dgvUsers.RowsDefaultCellStyle.Font = new Font("Consolas", 10F);
+        dgvUsers.RowsDefaultCellStyle.Font = new Font("Consolas", 12F);
         dgvUsers.RowsDefaultCellStyle.SelectionBackColor = Color.FromArgb(52, 152, 219);
         dgvUsers.RowsDefaultCellStyle.SelectionForeColor = Color.White;
         dgvUsers.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
@@ -93,7 +93,7 @@ public partial class MainForm : Form
             btn.FlatAppearance.BorderSize = 0;
             btn.BackColor = bg;
             btn.ForeColor = Color.White;
-            btn.Font = new Font("Consolas", 10F, FontStyle.Bold);
+            btn.Font = new Font("Consolas", 12F, FontStyle.Bold);
             btn.Cursor = Cursors.Hand;
             btn.MouseEnter += (_, _) => btn.BackColor = hover;
             btn.MouseLeave += (_, _) => btn.BackColor = bg;
@@ -105,7 +105,7 @@ public partial class MainForm : Form
         gbLogin.ForeColor = Color.FromArgb(41, 128, 185);
         gbUsers.ForeColor = Color.FromArgb(41, 128, 185);
         BackColor = Color.White;
-        txtUsername.Font = new Font("Consolas", 10F);
+        txtUsername.Font = new Font("Consolas", 12F);
         txtUsername.BackColor = Color.White;
         txtUsername.BorderStyle = BorderStyle.FixedSingle;
 
@@ -317,7 +317,7 @@ public partial class MainForm : Form
             MinimizeBox = false,
             MaximizeBox = false,
             BackColor = Color.White,
-            Font = new Font("Consolas", 10F)
+            Font = new Font("Consolas", 12F)
         };
 
         var lo = new TableLayoutPanel
@@ -339,7 +339,7 @@ public partial class MainForm : Form
                 FlatAppearance = { BorderSize = 0 },
                 BackColor = Color.FromArgb(52, 152, 219),
                 ForeColor = Color.White,
-                Font = new Font("Consolas", 10F, FontStyle.Bold),
+                Font = new Font("Consolas", 12F, FontStyle.Bold),
                 Cursor = Cursors.Hand
             };
             btn.MouseEnter += (_, _) => btn.BackColor = Color.FromArgb(41, 128, 185);

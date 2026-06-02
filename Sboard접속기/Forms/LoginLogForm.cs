@@ -11,6 +11,7 @@ public partial class LoginLogForm : Form
         ForeColor = Color.FromArgb(52, 73, 94);
         txtLog.BackColor = Color.FromArgb(245, 247, 250);
         txtLog.ForeColor = Color.FromArgb(52, 73, 94);
+        txtLog.Font = new Font("Consolas", 10F);
         this.KeyDown += LoginLogForm_KeyDown;
     }
 

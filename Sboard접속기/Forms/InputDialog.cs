@@ -3,12 +3,13 @@ namespace Sboard접속기.Forms;
 public partial class InputDialog : Form
 {
     private readonly Dictionary<string, Control> _inputs = [];
+    private readonly Button _btnOk;
     private bool _ok;
 
     public InputDialog(string title, params (string Label, string Key)[] fields)
     {
         this.Text = title;
-        this.Size = new Size(300, 100 + fields.Length * 40);
+        this.Size = new Size(340, 100 + fields.Length * 40);
         this.StartPosition = FormStartPosition.CenterParent;
         this.FormBorderStyle = FormBorderStyle.FixedDialog;
         this.MinimizeBox = false;
@@ -33,16 +34,17 @@ public partial class InputDialog : Form
             row++;
         }
 
-        var btnOk = new Button { Text = "확인", DialogResult = DialogResult.OK, Anchor = AnchorStyles.None };
+        _btnOk = new Button { Text = "확인", DialogResult = DialogResult.OK, Anchor = AnchorStyles.None };
         var btnCancel = new Button { Text = "취소", DialogResult = DialogResult.Cancel, Anchor = AnchorStyles.None };
-        btnOk.Click += (_, _) => _ok = true;
+        _btnOk.Click += (_, _) => _ok = true;
         var btnPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.RightToLeft, Dock = DockStyle.Fill };
         lo.SetColumnSpan(btnPanel, 2);
         lo.SetRow(btnPanel, fields.Length);
         btnPanel.Controls.Add(btnCancel);
-        btnPanel.Controls.Add(btnOk);
+        btnPanel.Controls.Add(_btnOk);
         lo.Controls.Add(btnPanel);
 
+        this.AcceptButton = _btnOk;
         this.Controls.Add(lo);
         LoadIcon();
         ApplyModernStyle();
@@ -61,12 +63,12 @@ public partial class InputDialog : Form
                 {
                     if (child is Label lbl)
                     {
-                        lbl.Font = new Font("Consolas", 10F);
+                        lbl.Font = new Font("Consolas", 12F);
                         lbl.ForeColor = Color.FromArgb(52, 73, 94);
                     }
                     if (child is TextBox tb)
                     {
-                        tb.Font = new Font("Consolas", 10F);
+                        tb.Font = new Font("Consolas", 12F);
                         tb.BorderStyle = BorderStyle.FixedSingle;
                         tb.BackColor = Color.White;
                     }
@@ -87,7 +89,7 @@ public partial class InputDialog : Form
     {
         btn.FlatStyle = FlatStyle.Flat;
         btn.FlatAppearance.BorderSize = 0;
-        btn.Font = new Font("Consolas", 10F, FontStyle.Bold);
+        btn.Font = new Font("Consolas", 12F, FontStyle.Bold);
         btn.Cursor = Cursors.Hand;
         if (btn.Text == "확인")
         {
