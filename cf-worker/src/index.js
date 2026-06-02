@@ -48,6 +48,11 @@ export default {
       return handleGetMeta(env, corsHeaders);
     }
 
+    // 라우팅: GET /api/update.xml  (AutoUpdater.NET)
+    if (path === '/api/update.xml' && method === 'GET') {
+      return handleGetUpdateXml(env, corsHeaders);
+    }
+
     // 404 Not Found
     return jsonResponse(
       { error: 'Not Found' },
@@ -122,9 +127,9 @@ async function handleDeleteUser(username, DB, corsHeaders) {
 // 업데이트 정보 (릴리스 시 함께 수정)
 // ========================================
 const UPDATE_INFO = {
-  version: '2.1.0',
-  sha256: '792e5799b0624ef28135971070f1866d7027fa3cd465a934d1e008e8c19838bd',
-  url: 'https://github.com/c-closed/sal/releases/download/v2.1.0/Sboard_Setup.exe',
+  version: '2.3.1',
+  version4: '2.3.1.0',
+  url: 'https://github.com/c-closed/sal/releases/download/v2.3.1/Sboard_Updated.zip',
 };
 
 // GET /api/meta  →  메타정보 + 업데이트 정보 반환
@@ -134,9 +139,22 @@ async function handleGetMeta(env, corsHeaders) {
     last_updated: getLastUpdated(),
     total_users: count,
     update_version: UPDATE_INFO.version,
-    update_sha256: UPDATE_INFO.sha256,
     update_url: UPDATE_INFO.url,
   }, corsHeaders);
+}
+
+// GET /api/update.xml  →  AutoUpdater.NET XML 반환
+async function handleGetUpdateXml(env, corsHeaders) {
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<item>
+    <version>${UPDATE_INFO.version4}</version>
+    <url>${UPDATE_INFO.url}</url>
+    <mandatory>true</mandatory>
+</item>`;
+  return new Response(xml, {
+    status: 200,
+    headers: { 'Content-Type': 'text/xml; charset=utf-8', ...corsHeaders },
+  });
 }
 
 // ----------------------------------------

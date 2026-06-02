@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sboard접속기.Services\Sboard접속기.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autoupdater.NET.Official" Version="1.9.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>2.3.1.0</Version>
+    <ApplicationVersion>2.3.1.0</ApplicationVersion>
+    <ApplicationDisplayVersion>2.3.1</ApplicationDisplayVersion>
+  </PropertyGroup>
+
+</Project>
