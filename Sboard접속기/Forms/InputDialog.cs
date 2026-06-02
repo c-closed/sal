@@ -34,14 +34,22 @@ public partial class InputDialog : Form
             row++;
         }
 
-        _btnOk = new Button { Text = "확인", DialogResult = DialogResult.OK, Anchor = AnchorStyles.None };
-        var btnCancel = new Button { Text = "취소", DialogResult = DialogResult.Cancel, Anchor = AnchorStyles.None };
+        _btnOk = new Button { Text = "확인", DialogResult = DialogResult.OK, Dock = DockStyle.Fill };
+        var btnCancel = new Button { Text = "취소", DialogResult = DialogResult.Cancel, Dock = DockStyle.Fill };
         _btnOk.Click += (_, _) => _ok = true;
-        var btnPanel = new FlowLayoutPanel { FlowDirection = FlowDirection.RightToLeft, Dock = DockStyle.Fill };
+        var btnPanel = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount = 1,
+            Margin = new Padding(0)
+        };
+        btnPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+        btnPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
         lo.SetColumnSpan(btnPanel, 2);
         lo.SetRow(btnPanel, fields.Length);
-        btnPanel.Controls.Add(btnCancel);
-        btnPanel.Controls.Add(_btnOk);
+        btnPanel.Controls.Add(btnCancel, 0, 0);
+        btnPanel.Controls.Add(_btnOk, 1, 0);
         lo.Controls.Add(btnPanel);
 
         this.AcceptButton = _btnOk;
@@ -72,7 +80,7 @@ public partial class InputDialog : Form
                         tb.BorderStyle = BorderStyle.FixedSingle;
                         tb.BackColor = Color.White;
                     }
-                    if (child is FlowLayoutPanel flp)
+                    if (child is TableLayoutPanel flp)
                     {
                         foreach (Control btn in flp.Controls)
                         {
