@@ -334,7 +334,7 @@ public partial class MainForm : Form
             {
                 Text = text,
                 Dock = DockStyle.Fill,
-                Height = 36,
+                Height = 28,
                 Margin = new Padding(0, 0, 0, 6),
                 FlatStyle = FlatStyle.Flat,
                 FlatAppearance = { BorderSize = 0 },
