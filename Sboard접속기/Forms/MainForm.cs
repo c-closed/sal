@@ -45,8 +45,9 @@ public partial class MainForm : Form
             {
                 Icon = new Icon(p);
                 return;
-            }
-        }
+    }
+}
+
     }
 
     [DllImport("dwmapi")]
@@ -314,7 +315,9 @@ public partial class MainForm : Form
             StartPosition = FormStartPosition.CenterParent,
             FormBorderStyle = FormBorderStyle.FixedDialog,
             MinimizeBox = false,
-            MaximizeBox = false
+            MaximizeBox = false,
+            BackColor = Color.White,
+            Font = new Font("Consolas", 10F)
         };
 
         var lo = new TableLayoutPanel
@@ -331,21 +334,29 @@ public partial class MainForm : Form
                 Text = text,
                 Dock = DockStyle.Fill,
                 Height = 36,
-                Margin = new Padding(0, 0, 0, 6)
+                Margin = new Padding(0, 0, 0, 6),
+                FlatStyle = FlatStyle.Flat,
+                FlatAppearance = { BorderSize = 0 },
+                BackColor = Color.FromArgb(52, 152, 219),
+                ForeColor = Color.White,
+                Font = new Font("Consolas", 10F, FontStyle.Bold),
+                Cursor = Cursors.Hand
             };
+            btn.MouseEnter += (_, _) => btn.BackColor = Color.FromArgb(41, 128, 185);
+            btn.MouseLeave += (_, _) => btn.BackColor = Color.FromArgb(52, 152, 219);
             btn.Click += click;
             lo.Controls.Add(btn);
         }
 
-        AddBtn("사용자 등록", (_, _) => { dlg.Close(); ShowRegisterDialog(); });
-        AddBtn("PW 변경", (_, _) => { dlg.Close(); ShowChangePwDialog(); });
-        AddBtn("사용자 삭제", (_, _) => { dlg.Close(); ShowDeleteDialog(); });
+        AddBtn("사용자 등록", async (_, _) => { dlg.Close(); await ShowRegisterDialogAsync(); });
+        AddBtn("PW 변경", async (_, _) => { dlg.Close(); await ShowChangePwDialogAsync(); });
+        AddBtn("사용자 삭제", async (_, _) => { dlg.Close(); await ShowDeleteDialogAsync(); });
 
         dlg.Controls.Add(lo);
         dlg.ShowDialog(this);
     }
 
-    private void ShowRegisterDialog()
+    private async Task ShowRegisterDialogAsync()
     {
         var input = new InputDialog("사용자 등록", ("이름", "name"), ("ID", "uid"), ("PW", "pw"));
         var res = input.ShowDialog(this);
@@ -353,7 +364,7 @@ public partial class MainForm : Form
 
         try
         {
-            _api.CreateUserAsync(res["name"], res["uid"], res["pw"]).GetAwaiter().GetResult();
+            await _api.CreateUserAsync(res["name"], res["uid"], res["pw"]);
             MessageBox.Show(this, "등록 완료!", "성공", MessageBoxButtons.OK, MessageBoxIcon.Information);
             _ = LoadUsersAsync();
         }
@@ -363,7 +374,7 @@ public partial class MainForm : Form
         }
     }
 
-    private void ShowChangePwDialog()
+    private async Task ShowChangePwDialogAsync()
     {
         var verify = new InputDialog("PW 변경 - 본인 확인", ("이름", "name"), ("ID", "uid"), ("현재 PW", "pw"));
         var res = verify.ShowDialog(this);
@@ -373,7 +384,7 @@ public partial class MainForm : Form
 
         try
         {
-            var users = _api.GetUsersAsync().GetAwaiter().GetResult();
+            var users = await _api.GetUsersAsync();
             if (!users.TryGetValue(name, out var info) || info.Id != uid || info.Pw != pw)
             {
                 MessageBox.Show(this, "사용자 정보가 일치하지 않습니다.", "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -392,7 +403,7 @@ public partial class MainForm : Form
 
         try
         {
-            _api.UpdateUserPwOnlyAsync(name, uid, res2["new_pw"]).GetAwaiter().GetResult();
+            await _api.UpdateUserPwOnlyAsync(name, uid, res2["new_pw"]);
             MessageBox.Show(this, "변경 완료!", "성공", MessageBoxButtons.OK, MessageBoxIcon.Information);
             _ = LoadUsersAsync();
         }
@@ -402,11 +413,11 @@ public partial class MainForm : Form
         }
     }
 
-    private void ShowDeleteDialog()
+    private async Task ShowDeleteDialogAsync()
     {
         try
         {
-            _users = _api.GetUsersAsync().GetAwaiter().GetResult();
+            _users = await _api.GetUsersAsync();
             RefreshUserGrid();
         }
         catch { }
@@ -429,7 +440,7 @@ public partial class MainForm : Form
 
         try
         {
-            _api.DeleteUserAsync(name).GetAwaiter().GetResult();
+            await _api.DeleteUserAsync(name);
             MessageBox.Show(this, "삭제 완료!", "성공", MessageBoxButtons.OK, MessageBoxIcon.Information);
             _ = LoadUsersAsync();
         }
@@ -437,4 +448,5 @@ public partial class MainForm : Form
         {
             MessageBox.Show(this, ex.Message, "오류", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-    }}
+    }
+}

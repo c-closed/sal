@@ -45,6 +45,64 @@ public partial class InputDialog : Form
 
         this.Controls.Add(lo);
         LoadIcon();
+        ApplyModernStyle();
+    }
+
+    private void ApplyModernStyle()
+    {
+        BackColor = Color.White;
+        ForeColor = Color.FromArgb(52, 73, 94);
+
+        foreach (Control c in this.Controls)
+        {
+            if (c is TableLayoutPanel tbl)
+            {
+                foreach (Control child in tbl.Controls)
+                {
+                    if (child is Label lbl)
+                    {
+                        lbl.Font = new Font("Consolas", 10F);
+                        lbl.ForeColor = Color.FromArgb(52, 73, 94);
+                    }
+                    if (child is TextBox tb)
+                    {
+                        tb.Font = new Font("Consolas", 10F);
+                        tb.BorderStyle = BorderStyle.FixedSingle;
+                        tb.BackColor = Color.White;
+                    }
+                    if (child is FlowLayoutPanel flp)
+                    {
+                        foreach (Control btn in flp.Controls)
+                        {
+                            if (btn is Button b)
+                                StyleButton(b);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static void StyleButton(Button btn)
+    {
+        btn.FlatStyle = FlatStyle.Flat;
+        btn.FlatAppearance.BorderSize = 0;
+        btn.Font = new Font("Consolas", 10F, FontStyle.Bold);
+        btn.Cursor = Cursors.Hand;
+        if (btn.Text == "확인")
+        {
+            btn.BackColor = Color.FromArgb(52, 152, 219);
+            btn.ForeColor = Color.White;
+            btn.MouseEnter += (_, _) => btn.BackColor = Color.FromArgb(41, 128, 185);
+            btn.MouseLeave += (_, _) => btn.BackColor = Color.FromArgb(52, 152, 219);
+        }
+        else
+        {
+            btn.BackColor = Color.FromArgb(149, 165, 166);
+            btn.ForeColor = Color.White;
+            btn.MouseEnter += (_, _) => btn.BackColor = Color.FromArgb(127, 140, 141);
+            btn.MouseLeave += (_, _) => btn.BackColor = Color.FromArgb(149, 165, 166);
+        }
     }
 
     private void LoadIcon()

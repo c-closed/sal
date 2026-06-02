@@ -7,6 +7,10 @@ public partial class LoginLogForm : Form
         InitializeComponent();
         this.Text = $"{username} 로그인 진행";
         LoadIcon();
+        BackColor = Color.White;
+        ForeColor = Color.FromArgb(52, 73, 94);
+        txtLog.BackColor = Color.FromArgb(245, 247, 250);
+        txtLog.ForeColor = Color.FromArgb(52, 73, 94);
         this.KeyDown += LoginLogForm_KeyDown;
     }
 
