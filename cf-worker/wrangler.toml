@@ -6,6 +6,7 @@
 name = "sboard-api"
 main = "src/index.js"
 compatibility_date = "2024-12-30"
+account_id = "f22604c3501a4b41f07d3ecc6fa9056a"
 
 # D1 데이터베이스 바인딩
 [[ d1_databases ]]

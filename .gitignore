@@ -8,3 +8,17 @@ build/
 .idea/
 .wrangler/
 node_modules/
+.vs/
+bin/
+obj/
+*.msi
+*.zip
+publish/
+Setup/Debug/
+Setup/Release/
+UpgradeLog.htm
+sal_patch.tmp
+spec.tmp
+updater_py.tmp
+*.log
+cf.tmp
