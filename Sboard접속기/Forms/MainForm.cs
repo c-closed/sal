@@ -312,7 +312,7 @@ public partial class MainForm : Form
         using var dlg = new Form
         {
             Text = "사용자 관리",
-            Size = new Size(280, 220),
+            ClientSize = new Size(280, 120),
             StartPosition = FormStartPosition.CenterParent,
             FormBorderStyle = FormBorderStyle.FixedDialog,
             MinimizeBox = false,
@@ -321,21 +321,14 @@ public partial class MainForm : Form
             Font = new Font("Consolas", 12F)
         };
 
-        var lo = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            Padding = new Padding(15, 12, 15, 12),
-            ColumnCount = 1
-        };
-
+        int y = 12;
         void AddBtn(string text, EventHandler click)
         {
             var btn = new Button
             {
                 Text = text,
-                Height = 28,
-                Anchor = AnchorStyles.Left | AnchorStyles.Right,
-                Margin = new Padding(0, 0, 0, 6),
+                Bounds = new Rectangle(15, y, dlg.ClientSize.Width - 30, 28),
+                Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
                 FlatStyle = FlatStyle.Flat,
                 FlatAppearance = { BorderSize = 0 },
                 BackColor = Color.FromArgb(52, 152, 219),
@@ -346,14 +339,14 @@ public partial class MainForm : Form
             btn.MouseEnter += (_, _) => btn.BackColor = Color.FromArgb(41, 128, 185);
             btn.MouseLeave += (_, _) => btn.BackColor = Color.FromArgb(52, 152, 219);
             btn.Click += click;
-            lo.Controls.Add(btn);
+            dlg.Controls.Add(btn);
+            y += 34;
         }
 
         AddBtn("사용자 등록", async (_, _) => { dlg.Close(); await ShowRegisterDialogAsync(); });
         AddBtn("PW 변경", async (_, _) => { dlg.Close(); await ShowChangePwDialogAsync(); });
         AddBtn("사용자 삭제", async (_, _) => { dlg.Close(); await ShowDeleteDialogAsync(); });
 
-        dlg.Controls.Add(lo);
         dlg.ShowDialog(this);
     }
 
