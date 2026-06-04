@@ -1,4 +1,4 @@
-﻿param([string]$Version = "3.4.0.3")
+﻿param([string]$Version = "3.4.0.4")
 $ErrorActionPreference = "Stop"
 $scriptDir = if ($PSCommandPath) { Split-Path -Parent $PSCommandPath } else { Get-Location }
 $projDir = Resolve-Path (Join-Path $scriptDir "..")
@@ -163,7 +163,7 @@ foreach ($f in $files) {
 
 # Media (6 cols: DiskId[INT], LastSequence[INT], DiskPrompt, Cabinet, VolumeLabel, Source)
 $vbsLines += 'Set rec = installer.CreateRecord(6)'
-$vbsLines += "rec.IntegerData(1)=1:rec.IntegerData(2)=$($files.Count):rec.StringData(3)="""":rec.StringData(4)=""Setup.cab"":rec.StringData(5)="""":rec.StringData(6)="""":db.OpenView(""INSERT INTO ``Media`` (``DiskId``,``LastSequence``,``DiskPrompt``,``Cabinet``,``VolumeLabel``,``Source``) VALUES (?,?,?,?,?,?)"").Execute(rec)"
+$vbsLines += "rec.IntegerData(1)=1:rec.IntegerData(2)=$($files.Count):rec.StringData(3)="""":rec.StringData(4)=""#Setup.cab"":rec.StringData(5)="""":rec.StringData(6)="""":db.OpenView(""INSERT INTO ``Media`` (``DiskId``,``LastSequence``,``DiskPrompt``,``Cabinet``,``VolumeLabel``,``Source``) VALUES (?,?,?,?,?,?)"").Execute(rec)"
 
 # CreateFolder (2 string cols: Directory_, Component_)
 $vbsLines += 'Set rec = installer.CreateRecord(2)'
@@ -219,6 +219,21 @@ $vbsLines += "sum.Property(4)=""Sboard"""
 $vbsLines += 'sum.Persist'
 $vbsLines += 'Set sum = Nothing'
 $vbsLines += 'On Error Goto 0'
+
+# Embed cabinet as embedded stream
+$cabPathVbs = $cabFile -replace '\\', '\\'
+$vbsLines += "Set db = installer.OpenDatabase(""$outputMsi"", 1)"
+$vbsLines += 'Set view = db.OpenView("SELECT `Name`, `Data` FROM `_Streams`")'
+$vbsLines += 'Set rec = installer.CreateRecord(2)'
+$vbsLines += 'rec.StringData(1) = "Setup.cab"'
+$vbsLines += "rec.SetStream 2, ""$cabPathVbs"""
+$vbsLines += 'view.Modify 3, rec  '' 3 = msiViewModifyAssign (insert or replace)'
+$vbsLines += 'view.Close'
+$vbsLines += 'db.Commit'
+$vbsLines += 'Set db = Nothing'
+$vbsLines += 'Set view = Nothing'
+$vbsLines += 'Set rec = Nothing'
+$vbsLines += 'WScript.Echo "Cabinet embedded"'
 
 $vbsLines += 'WScript.Echo "OK"'
 
