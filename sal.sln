@@ -44,11 +44,17 @@ Global
 		{03CE8E02-6F47-4F16-A504-A36483597535}.Release|x86.ActiveCfg = Release|Any CPU
 		{03CE8E02-6F47-4F16-A504-A36483597535}.Release|x86.Build.0 = Release|Any CPU
 		{DBE9999D-346E-CA63-6964-F3B7FC1D42B4}.Debug|Any CPU.ActiveCfg = Debug
+		{DBE9999D-346E-CA63-6964-F3B7FC1D42B4}.Debug|Any CPU.Build.0 = Debug
 		{DBE9999D-346E-CA63-6964-F3B7FC1D42B4}.Debug|x64.ActiveCfg = Debug
+		{DBE9999D-346E-CA63-6964-F3B7FC1D42B4}.Debug|x64.Build.0 = Debug
 		{DBE9999D-346E-CA63-6964-F3B7FC1D42B4}.Debug|x86.ActiveCfg = Debug
+		{DBE9999D-346E-CA63-6964-F3B7FC1D42B4}.Debug|x86.Build.0 = Debug
 		{DBE9999D-346E-CA63-6964-F3B7FC1D42B4}.Release|Any CPU.ActiveCfg = Release
+		{DBE9999D-346E-CA63-6964-F3B7FC1D42B4}.Release|Any CPU.Build.0 = Release
 		{DBE9999D-346E-CA63-6964-F3B7FC1D42B4}.Release|x64.ActiveCfg = Release
+		{DBE9999D-346E-CA63-6964-F3B7FC1D42B4}.Release|x64.Build.0 = Release
 		{DBE9999D-346E-CA63-6964-F3B7FC1D42B4}.Release|x86.ActiveCfg = Release
+		{DBE9999D-346E-CA63-6964-F3B7FC1D42B4}.Release|x86.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
