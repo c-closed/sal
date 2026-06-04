@@ -1,4 +1,4 @@
-"DeployProject"
+﻿"DeployProject"
 {
 "VSVersion" = "3:800"
 "ProjectType" = "8:{978C614F-708E-4E1A-B201-565925725DBA}"
@@ -189,7 +189,7 @@
         "Product"
         {
         "Name" = "8:Microsoft Visual Studio"
-        "ProductName" = "8:Sboard ???"
+        "ProductName" = "8:Sboard 접속기"
         "ProductCode" = "8:{D0ACF8B3-4A70-4F1A-8EB9-A3A8570F9B80}"
         "PackageCode" = "8:{3BDAAA89-7DB4-4550-A586-BC6F89BFA832}"
         "UpgradeCode" = "8:{C3DC88AF-6940-4BF0-9BC8-5CC7D7430A33}"
@@ -198,13 +198,13 @@
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:3.4.5"
-        "Manufacturer" = "8:???"
+        "ProductVersion" = "8:3.4.0.2"
+        "Manufacturer" = "8:류호준"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
         "Title" = "8:Setup"
         "Subject" = "8:"
-        "ARPCONTACT" = "8:???"
+        "ARPCONTACT" = "8:류호준"
         "Keywords" = "8:"
         "ARPCOMMENTS" = "8:"
         "ARPURLINFOABOUT" = "8:"
@@ -313,21 +313,21 @@
         {
             "{CEE592B1-1C28-4A62-9C5E-7D7FF1653956}:_C7AAAD841DEA474CB55CD9176C723636"
             {
-            "Name" = "8:Sboard ???"
+            "Name" = "8:Sboard 접속기"
             "Target" = "8:_40D5A71ED42E46C890D733E28FD705BB"
             "Folder" = "8:_2652F05301054253B0D0B838689F1060"
             "Arguments" = "8:"
-            "Description" = "8:Sboard ?? ???"
+            "Description" = "8:Sboard 자동 로그인"
             "ShowCmd" = "3:1"
             "IconIndex" = "3:0"
             }
             "{CEE592B1-1C28-4A62-9C5E-7D7FF1653956}:_C3080693CA57480EB162D2764F4B6DF5"
             {
-            "Name" = "8:Sboard ???"
+            "Name" = "8:Sboard 접속기"
             "Target" = "8:_40D5A71ED42E46C890D733E28FD705BB"
             "Folder" = "8:_28061DF6B375430B904681E6161F217E"
             "Arguments" = "8:"
-            "Description" = "8:Sboard ?? ???"
+            "Description" = "8:Sboard 자동 로그인"
             "ShowCmd" = "3:1"
             "IconIndex" = "3:0"
             }
@@ -344,7 +344,7 @@
                     "{688940B3-5CA9-4162-8DEE-2993FA9D8CBC}:_AE1524C145D240B8A3D9874CBC18B301"
                     {
                     "Sequence" = "3:200"
-                    "DisplayName" = "8:?? ??"
+                    "DisplayName" = "8:설치 폴더"
                     "UseDynamicProperties" = "11:TRUE"
                     "IsDependency" = "11:FALSE"
                     "SourcePath" = "8:<VsdDialogDir>\\VsdFolderDlg.wid"
@@ -379,7 +379,7 @@
                     "{688940B3-5CA9-4162-8DEE-2993FA9D8CBC}:_C9DE5F9D08884F4D84C2498C64FEEF7E"
                     {
                     "Sequence" = "3:300"
-                    "DisplayName" = "8:?? ??"
+                    "DisplayName" = "8:설치 확인"
                     "UseDynamicProperties" = "11:TRUE"
                     "IsDependency" = "11:FALSE"
                     "SourcePath" = "8:<VsdDialogDir>\\VsdConfirmDlg.wid"
@@ -401,7 +401,7 @@
                     "{688940B3-5CA9-4162-8DEE-2993FA9D8CBC}:_E3CCCD68CE614B5E943153B5968621A3"
                     {
                     "Sequence" = "3:100"
-                    "DisplayName" = "8:??"
+                    "DisplayName" = "8:환영"
                     "UseDynamicProperties" = "11:TRUE"
                     "IsDependency" = "11:FALSE"
                     "SourcePath" = "8:<VsdDialogDir>\\VsdWelcomeDlg.wid"
@@ -458,7 +458,7 @@
                     "{688940B3-5CA9-4162-8DEE-2993FA9D8CBC}:_FBEC2012D1604AFB99EB588BA197BD50"
                     {
                     "Sequence" = "3:100"
-                    "DisplayName" = "8:???"
+                    "DisplayName" = "8:진행률"
                     "UseDynamicProperties" = "11:TRUE"
                     "IsDependency" = "11:FALSE"
                     "SourcePath" = "8:<VsdDialogDir>\\VsdProgressDlg.wid"
@@ -508,7 +508,7 @@
                     "{688940B3-5CA9-4162-8DEE-2993FA9D8CBC}:_A5CF4F244888416A89406A965A0A81EB"
                     {
                     "Sequence" = "3:100"
-                    "DisplayName" = "8:??"
+                    "DisplayName" = "8:마침"
                     "UseDynamicProperties" = "11:TRUE"
                     "IsDependency" = "11:FALSE"
                     "SourcePath" = "8:<VsdDialogDir>\\VsdAdminFinishedDlg.wid"
@@ -545,7 +545,7 @@
                     "{688940B3-5CA9-4162-8DEE-2993FA9D8CBC}:_3A97267ED10445B38AF40C6EE0A71126"
                     {
                     "Sequence" = "3:100"
-                    "DisplayName" = "8:??"
+                    "DisplayName" = "8:마침"
                     "UseDynamicProperties" = "11:TRUE"
                     "IsDependency" = "11:FALSE"
                     "SourcePath" = "8:<VsdDialogDir>\\VsdFinishedDlg.wid"
@@ -589,7 +589,7 @@
                     "{688940B3-5CA9-4162-8DEE-2993FA9D8CBC}:_7EE32BAA89A845A1AC9A1FAB14C32E4E"
                     {
                     "Sequence" = "3:100"
-                    "DisplayName" = "8:???"
+                    "DisplayName" = "8:진행률"
                     "UseDynamicProperties" = "11:TRUE"
                     "IsDependency" = "11:FALSE"
                     "SourcePath" = "8:<VsdDialogDir>\\VsdAdminProgressDlg.wid"
@@ -633,7 +633,7 @@
                     "{688940B3-5CA9-4162-8DEE-2993FA9D8CBC}:_4400D7CD45B34937AD0AC4C7BD86D977"
                     {
                     "Sequence" = "3:300"
-                    "DisplayName" = "8:?? ??"
+                    "DisplayName" = "8:설치 확인"
                     "UseDynamicProperties" = "11:TRUE"
                     "IsDependency" = "11:FALSE"
                     "SourcePath" = "8:<VsdDialogDir>\\VsdAdminConfirmDlg.wid"
@@ -655,7 +655,7 @@
                     "{688940B3-5CA9-4162-8DEE-2993FA9D8CBC}:_601799B95FD54BEBB717F2BD52A3D434"
                     {
                     "Sequence" = "3:200"
-                    "DisplayName" = "8:?? ??"
+                    "DisplayName" = "8:설치 폴더"
                     "UseDynamicProperties" = "11:TRUE"
                     "IsDependency" = "11:FALSE"
                     "SourcePath" = "8:<VsdDialogDir>\\VsdAdminFolderDlg.wid"
@@ -677,7 +677,7 @@
                     "{688940B3-5CA9-4162-8DEE-2993FA9D8CBC}:_A874B4ECCCC54BAF832808D59DED95D8"
                     {
                     "Sequence" = "3:100"
-                    "DisplayName" = "8:??"
+                    "DisplayName" = "8:환영"
                     "UseDynamicProperties" = "11:TRUE"
                     "IsDependency" = "11:FALSE"
                     "SourcePath" = "8:<VsdDialogDir>\\VsdAdminWelcomeDlg.wid"
@@ -732,7 +732,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_40D5A71ED42E46C890D733E28FD705BB"
             {
-            "SourcePath" = "8:..\\Sboard???\\obj\\Release\\net8.0-windows\\apphost.exe"
+            "SourcePath" = "8:..\\Sboard접속기\\obj\\Release\\net8.0-windows\\apphost.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_6D3D7F67F0424E31983858D23C1009B4"

@@ -1,4 +1,4 @@
-﻿param([string]$Version = "3.4.0.5")
+﻿param([string]$Version = "3.4.0.6")
 $ErrorActionPreference = "Stop"
 $scriptDir = if ($PSCommandPath) { Split-Path -Parent $PSCommandPath } else { Get-Location }
 $projDir = Resolve-Path (Join-Path $scriptDir "..")
@@ -7,7 +7,6 @@ $projDir = Resolve-Path (Join-Path $scriptDir "..")
 $vParts = $Version.Split('.')
 if ($vParts.Length -ne 4) { Write-Error "Version must be 4-part (e.g. 3.4.0.4)"; exit 1 }
 $major = $vParts[0]; $minor = $vParts[1]; $build = $vParts[3]
-$vdprojVersion = "$major.$minor.$build"
 
 # Find publish dir
 $publishDir = $null
@@ -27,9 +26,10 @@ if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force }
 New-Item $tempDir -ItemType Directory -Force | Out-Null
 
 Write-Host "=== Step 1: Update Setup project version ==="
-$vdprojPath = [System.IO.Path]::GetFullPath((Join-Path $scriptDir "Setup.vdproj"))
-(Get-Content $vdprojPath) -replace '"ProductVersion" = "8:[^"]*"', "`"ProductVersion`" = `"8:$vdprojVersion`"" | Set-Content $vdprojPath -Encoding ASCII
-Write-Host "ProductVersion set to $vdprojVersion"
+$vdprojPath = Resolve-Path (Join-Path $scriptDir "Setup.vdproj")
+$version3 = "$major.$minor.$build"
+(Get-Content $vdprojPath) -replace '"ProductVersion" = "8:[^"]*"', "`"ProductVersion`" = `"8:$version3`"" | Set-Content $vdprojPath -Encoding ASCII
+Write-Host "ProductVersion set to $version3"
 
 Write-Host "=== Step 2: Rebuild VS Setup project ==="
 $devenv = "C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\devenv.com"
@@ -42,68 +42,62 @@ if ($proc.ExitCode -ne 0) {
     exit 1
 }
 
-$outputMsi = [System.IO.Path]::GetFullPath((Join-Path $scriptDir "Release\Setup.msi"))
+$outputMsi = Resolve-Path (Join-Path $scriptDir "Release\Setup.msi")
 if (-not (Test-Path $outputMsi)) { Write-Error "MSI not found"; exit 1 }
 Write-Host "MSI: $outputMsi ($([math]::Round((Get-Item $outputMsi).Length/1MB,2)) MB)"
 
+Write-Host "=== Step 3: Post-process MSI via VBS ==="
+$vbsScriptPath = Resolve-Path (Join-Path $scriptDir "post-process.vbs")
+$vbsResult = & cscript.exe //nologo "`"$vbsScriptPath`"" "`"$outputMsi`"" 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "VBS warning (non-fatal): $vbsResult"
+}
+
+Write-Host "=== Step 4: Update dynamic MSI properties ==="
 $productCode = [guid]::NewGuid().ToString("B").ToUpper()
 $upgradeCode = "{B2E7A57D-3B2A-4F8C-9E1D-5A2F7C8B9E1A}"
 $title = "$productName v$Version"
 $escTitle = $title -replace '"', '""'
 $escProductName = $productName -replace '"', '""'
 
-Write-Host "=== Step 3: Post-process MSI ==="
-$vbsPath = Join-Path $tempDir "build.vbs"
+try {
+    $installer = New-Object -ComObject WindowsInstaller.Installer
+    $db = $installer.GetType().InvokeMember("OpenDatabase", [System.Reflection.BindingFlags]::InvokeMethod, $null, $installer, @($outputMsi, 1))
+    
+    $view = $db.GetType().InvokeMember("OpenView", [System.Reflection.BindingFlags]::InvokeMethod, $null, $db, @("DELETE FROM `Upgrade`"))
+    $view.GetType().InvokeMember("Execute", [System.Reflection.BindingFlags]::InvokeMethod, $null, $view, $null)
+    
+    $view = $db.GetType().InvokeMember("OpenView", [System.Reflection.BindingFlags]::InvokeMethod, $null, $db, @("INSERT INTO `Upgrade` (`UpgradeCode`,`VersionMin`,`VersionMax`,`Language`,`Attributes`,`Remove`,`ActionProperty`) VALUES ('$upgradeCode','','','',768,'','PREVIOUSVERSIONSINSTALLED')"))
+    $view.GetType().InvokeMember("Execute", [System.Reflection.BindingFlags]::InvokeMethod, $null, $view, $null)
+    
+    $updates = @(
+        "UPDATE `Property` SET `Value`='$productCode' WHERE `Property`='ProductCode'",
+        "UPDATE `Property` SET `Value`='$Version' WHERE `Property`='ProductVersion'",
+        "UPDATE `Property` SET `Value`='$escProductName' WHERE `Property`='ProductName'",
+        "UPDATE `Property` SET `Value`='Sboard' WHERE `Property`='Manufacturer'",
+        "UPDATE `Property` SET `Value`='$upgradeCode' WHERE `Property`='UpgradeCode'"
+    )
+    foreach ($sql in $updates) {
+        $view = $db.GetType().InvokeMember("OpenView", [System.Reflection.BindingFlags]::InvokeMethod, $null, $db, @($sql))
+        $view.GetType().InvokeMember("Execute", [System.Reflection.BindingFlags]::InvokeMethod, $null, $view, $null)
+    }
+    
+    $db.GetType().InvokeMember("Commit", [System.Reflection.BindingFlags]::InvokeMethod, $null, $db, $null)
+    
+    # Update SummaryInfo
+    $sum = $installer.GetType().InvokeMember("SummaryInformation", [System.Reflection.BindingFlags]::InvokeMethod, $null, $installer, @($outputMsi, 1))
+    $sum.GetType().InvokeMember("Property", [System.Reflection.BindingFlags]::SetProperty, $null, $sum, @(1, $escTitle))
+    $sum.GetType().InvokeMember("Property", [System.Reflection.BindingFlags]::SetProperty, $null, $sum, @(2, $escTitle))
+    $sum.GetType().InvokeMember("Property", [System.Reflection.BindingFlags]::SetProperty, $null, $sum, @(4, "Sboard"))
+    $sum.GetType().InvokeMember("Persist", [System.Reflection.BindingFlags]::InvokeMethod, $null, $sum, $null)
+    
+    Write-Host "MSI properties updated. ProductCode=$productCode"
+} catch {
+    Write-Error "MSI update failed: $_"
+    exit 1
+}
 
-$vbsContent = @"
-Dim installer, db
-Set installer = CreateObject("WindowsInstaller.Installer")
-Set db = installer.OpenDatabase("$outputMsi", 1)
-
-' Delete MSVBDPCADLL references
-db.OpenView("DELETE FROM `Binary` WHERE `Name`='MSVBDPCADLL'").Execute
-db.OpenView("DELETE FROM `CustomAction` WHERE `Source`='MSVBDPCADLL'").Execute
-db.OpenView("DELETE FROM `InstallUISequence` WHERE `Action`='DIRCA_CheckNETCore' OR `Action`='ERRCA_UIANDADVERTISED' OR `Action`='VSDCA_VsdLaunchConditions'").Execute
-
-' Delete old Upgrade and insert new one
-db.OpenView("DELETE FROM `Upgrade`").Execute
-db.OpenView("INSERT INTO `Upgrade` (`UpgradeCode`,`VersionMin`,`VersionMax`,`Language`,`Attributes`,`Remove`,`ActionProperty`) VALUES ('$upgradeCode','','','',768,'','PREVIOUSVERSIONSINSTALLED')").Execute
-
-' Update Properties
-db.OpenView("UPDATE `Property` SET `Value`='$productCode' WHERE `Property`='ProductCode'").Execute
-db.OpenView("UPDATE `Property` SET `Value`='$Version' WHERE `Property`='ProductVersion'").Execute
-db.OpenView("UPDATE `Property` SET `Value`='$escProductName' WHERE `Property`='ProductName'").Execute
-db.OpenView("UPDATE `Property` SET `Value`='Sboard' WHERE `Property`='Manufacturer'").Execute
-db.OpenView("UPDATE `Property` SET `Value`='$upgradeCode' WHERE `Property`='UpgradeCode'").Execute
-
-db.Commit
-Set db = Nothing
-
-' Update SummaryInfo
-Dim installer2, sum
-Set installer2 = CreateObject("WindowsInstaller.Installer")
-On Error Resume Next
-Set sum = installer2.SummaryInformation("$outputMsi", 1)
-If Not Err Then
-    sum.Property(1) = "$escTitle"
-    sum.Property(2) = "$escTitle"
-    sum.Property(4) = "Sboard"
-    sum.Persist
-End If
-Set sum = Nothing
-On Error Goto 0
-Set installer2 = Nothing
-
-WScript.Echo "OK"
-"@
-
-[System.IO.File]::WriteAllText($vbsPath, $vbsContent, [System.Text.Encoding]::Unicode)
-
-$vbsResult = & cscript.exe //nologo $vbsPath 2>&1
-Write-Host $vbsResult
-if ($vbsResult -notcontains "OK") { Write-Error "VBScript failed"; exit 1 }
-
-Write-Host "=== Step 4: Done ==="
+Write-Host "=== Step 5: Done ==="
 Write-Host "MSI: $outputMsi ($([math]::Round((Get-Item $outputMsi).Length/1MB,2)) MB)"
 
 Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue

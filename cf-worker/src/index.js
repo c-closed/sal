@@ -127,9 +127,9 @@ async function handleDeleteUser(username, DB, corsHeaders) {
 // 업데이트 정보 (릴리스 시 함께 수정)
 // ========================================
 const UPDATE_INFO = {
-  version: '3.4.0.5',
-  version4: '3.4.0.5',
-  url: 'https://github.com/c-closed/sal/releases/download/v3.4.0.5/Sboard_Updated.zip',
+  version: '3.4.0.6',
+  version4: '3.4.0.6',
+  url: 'https://github.com/c-closed/sal/releases/download/v3.4.0.6/Sboard_Updated.zip',
 };
 
 // GET /api/meta  →  메타정보 + 업데이트 정보 반환
