@@ -2,6 +2,7 @@ using System.Data;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using AutoUpdaterDotNET;
+using Microsoft.Win32;
 using Sboard접속기.Services;
 using Sboard접속기.Services.Models;
 
@@ -63,7 +64,42 @@ public partial class MainForm : Form
         AutoUpdater.ReportErrors = false;
         AutoUpdater.Start(Config.UpdateXmlUrl);
 
+        UpdateRegistryVersion();
+
         await LoadUsersAsync();
+    }
+
+    private static void UpdateRegistryVersion()
+    {
+        try
+        {
+            var uninstallPaths = new[]
+            {
+                @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+                @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+            };
+            foreach (var path in uninstallPaths)
+            {
+                using var baseKey = Registry.LocalMachine.OpenSubKey(path, writable: true);
+                if (baseKey is null) continue;
+                foreach (var subKeyName in baseKey.GetSubKeyNames())
+                {
+                    using var subKey = baseKey.OpenSubKey(subKeyName, writable: true);
+                    if (subKey is null) continue;
+                    var name = subKey.GetValue("DisplayName") as string;
+                    if (string.IsNullOrEmpty(name)) continue;
+                    if (name.Contains("Sboard접속기") || name.Contains("Sboard"))
+                    {
+                        subKey.SetValue("DisplayVersion", Config.AppVersion);
+                        subKey.SetValue("DisplayName", "Sboard접속기");
+                        break;
+                    }
+                }
+            }
+        }
+        catch
+        {
+        }
     }
 
     private void ApplyModernStyle()

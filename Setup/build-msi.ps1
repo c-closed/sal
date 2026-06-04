@@ -1,4 +1,4 @@
-﻿param([string]$Version = "3.4.0.2")
+﻿param([string]$Version = "3.4.0.3")
 $ErrorActionPreference = "Stop"
 $scriptDir = if ($PSCommandPath) { Split-Path -Parent $PSCommandPath } else { Get-Location }
 $projDir = Resolve-Path (Join-Path $scriptDir "..")
@@ -90,6 +90,9 @@ $vbsLines += 'db.OpenView("DELETE FROM `Feature`").Execute'
 $vbsLines += 'db.OpenView("DELETE FROM `Property`").Execute'
 $vbsLines += 'db.OpenView("DELETE FROM `LaunchCondition`").Execute'
 $vbsLines += 'db.OpenView("DELETE FROM `InstallExecuteSequence`").Execute'
+$vbsLines += 'db.OpenView("DELETE FROM `InstallUISequence` WHERE `Action`=''DIRCA_CheckNETCore'' OR `Action`=''ERRCA_UIANDADVERTISED'' OR `Action`=''VSDCA_VsdLaunchConditions''").Execute'
+$vbsLines += 'db.OpenView("DELETE FROM `CustomAction` WHERE `Source`=''MSVBDPCADLL'' OR `Target`=''[VSDVERSIONMSG]'' OR `Target`=''[VSDUIANDADVERTISED]''").Execute'
+$vbsLines += 'db.OpenView("DELETE FROM `Binary` WHERE `Name`=''MSVBDPCADLL''").Execute'
 $vbsLines += 'db.OpenView("DELETE FROM `Upgrade`").Execute'
 
 # Property (2 string cols)
