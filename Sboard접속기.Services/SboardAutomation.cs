@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -9,6 +10,7 @@ public class SboardAutomation
 {
     private const string LoginWindowTitle = "Sboard";
     private const string SessionPrefix = "Sboard [";
+    private const string EditClassName = "Edit";
 
     public bool LaunchSboard()
     {
@@ -107,25 +109,87 @@ public class SboardAutomation
     public void InputCredentials(IntPtr hwnd, string id, string pw)
     {
         NativeMethods.SetForegroundWindow(hwnd);
-        Thread.Sleep(150);
+        Thread.Sleep(200);
 
+        var fields = FindEditFields(hwnd);
+        if (fields.Count >= 2)
+        {
+            var (idField, pwField) = (fields[0], fields[1]);
+            TypeTextInField(idField, hwnd, id);
+            TypeTextInField(pwField, hwnd, pw);
+        }
+        else
+        {
+            FallbackInput(hwnd, id, pw);
+        }
+
+        Thread.Sleep(200);
+        NativeMethods.SendKeyPress((ushort)NativeMethods.VK_RETURN);
+    }
+
+    private List<IntPtr> FindEditFields(IntPtr parentHwnd)
+    {
+        var fields = new List<IntPtr>();
+        var classNameBuf = new StringBuilder(256);
+
+        NativeMethods.EnumChildWindows(parentHwnd, (child, _) =>
+        {
+            if (!NativeMethods.IsWindowVisible(child)) return true;
+            classNameBuf.Clear();
+            NativeMethods.GetClassNameW(child, classNameBuf, classNameBuf.Capacity);
+            if (classNameBuf.ToString() == EditClassName)
+                fields.Add(child);
+            return true;
+        }, IntPtr.Zero);
+
+        return fields;
+    }
+
+    private void TypeTextInField(IntPtr fieldHwnd, IntPtr loginHwnd, string text)
+    {
+        NativeMethods.SendMessageW(fieldHwnd, NativeMethods.WM_SETTEXT, IntPtr.Zero, new StringBuilder(text));
+    }
+
+    private void FallbackInput(IntPtr hwnd, string id, string pw)
+    {
+        NativeMethods.SetForegroundWindow(hwnd);
+        Thread.Sleep(150);
         PressKey(NativeMethods.VK_TAB); Thread.Sleep(50);
         PressKey(NativeMethods.VK_TAB); Thread.Sleep(50);
 
         NativeMethods.SetForegroundWindow(hwnd);
         Thread.Sleep(150);
-        SetClipboard(id);
-        PasteWithControlV();
+        SendKeysDirect(id);
 
         PressKey(NativeMethods.VK_TAB); Thread.Sleep(50);
 
         NativeMethods.SetForegroundWindow(hwnd);
         Thread.Sleep(150);
-        SetClipboard(pw);
-        PasteWithControlV();
+        SendKeysDirect(pw);
+    }
 
-        Thread.Sleep(100);
-        PressKey(NativeMethods.VK_RETURN);
+    private static void SendKeysDirect(string text)
+    {
+        NativeMethods.SendUnicodeText(text);
+    }
+
+    public bool VerifyInput(IntPtr loginHwnd, string expectedId, string expectedPw)
+    {
+        var fields = FindEditFields(loginHwnd);
+        if (fields.Count < 2) return false;
+
+        bool idOk = GetFieldText(fields[0]) == expectedId;
+        bool pwOk = GetFieldText(fields[1]) == expectedPw;
+        return idOk && pwOk;
+    }
+
+    private static string GetFieldText(IntPtr fieldHwnd)
+    {
+        int len = (int)NativeMethods.SendMessageW(fieldHwnd, NativeMethods.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero);
+        if (len <= 0) return "";
+        var sb = new StringBuilder(len + 1);
+        NativeMethods.SendMessageW(fieldHwnd, NativeMethods.WM_GETTEXT, (IntPtr)(len + 1), sb);
+        return sb.ToString();
     }
 
     public void KillSboard()
@@ -181,25 +245,5 @@ public class SboardAutomation
         Thread.Sleep(20);
         NativeMethods.keybd_event(vk, 0, NativeMethods.KEYEVENTF_KEYUP, IntPtr.Zero);
         Thread.Sleep(20);
-    }
-
-    private static void SetClipboard(string text)
-    {
-        Thread staThread = new(() => Clipboard.SetText(text));
-        staThread.SetApartmentState(ApartmentState.STA);
-        staThread.Start();
-        staThread.Join();
-    }
-
-    private static void PasteWithControlV()
-    {
-        NativeMethods.keybd_event(NativeMethods.VK_CONTROL, 0, 0, IntPtr.Zero);
-        Thread.Sleep(10);
-        NativeMethods.keybd_event(NativeMethods.VK_V, 0, 0, IntPtr.Zero);
-        Thread.Sleep(10);
-        NativeMethods.keybd_event(NativeMethods.VK_V, 0, NativeMethods.KEYEVENTF_KEYUP, IntPtr.Zero);
-        Thread.Sleep(10);
-        NativeMethods.keybd_event(NativeMethods.VK_CONTROL, 0, NativeMethods.KEYEVENTF_KEYUP, IntPtr.Zero);
-        Thread.Sleep(10);
     }
 }
