@@ -22,3 +22,5 @@ spec.tmp
 updater_py.tmp
 *.log
 cf.tmp
+
+publish_tmp/
