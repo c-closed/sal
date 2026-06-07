@@ -80,6 +80,8 @@ public static class NativeMethods
     public const uint WM_GETTEXTLENGTH = 0x000E;
     public const uint EM_GETPASSWORDCHAR = 0x00D2;
     public const uint WM_SETTEXT = 0x000C;
+    public const uint BM_CLICK = 0x00F5;
+    public const string ButtonClassName = "Button";
 
     public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 

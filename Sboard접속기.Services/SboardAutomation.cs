@@ -108,7 +108,6 @@ public class SboardAutomation
 
     public void InputCredentials(IntPtr hwnd, string id, string pw)
     {
-        NativeMethods.SetForegroundWindow(hwnd);
         Thread.Sleep(200);
 
         var fields = FindEditFields(hwnd);
@@ -124,7 +123,7 @@ public class SboardAutomation
         }
 
         Thread.Sleep(200);
-        NativeMethods.SendKeyPress((ushort)NativeMethods.VK_RETURN);
+        ClickLoginButton(hwnd);
     }
 
     private List<IntPtr> FindEditFields(IntPtr parentHwnd)
@@ -148,6 +147,32 @@ public class SboardAutomation
     private void TypeTextInField(IntPtr fieldHwnd, IntPtr loginHwnd, string text)
     {
         NativeMethods.SendMessageW(fieldHwnd, NativeMethods.WM_SETTEXT, IntPtr.Zero, new StringBuilder(text));
+    }
+
+    private void ClickLoginButton(IntPtr loginHwnd)
+    {
+        var buttons = new List<IntPtr>();
+        var classNameBuf = new StringBuilder(256);
+
+        NativeMethods.EnumChildWindows(loginHwnd, (child, _) =>
+        {
+            if (!NativeMethods.IsWindowVisible(child)) return true;
+            classNameBuf.Clear();
+            NativeMethods.GetClassNameW(child, classNameBuf, classNameBuf.Capacity);
+            if (classNameBuf.ToString() == NativeMethods.ButtonClassName)
+                buttons.Add(child);
+            return true;
+        }, IntPtr.Zero);
+
+        var btn = buttons.FirstOrDefault();
+        if (btn != IntPtr.Zero)
+        {
+            NativeMethods.SendMessageW(btn, NativeMethods.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
+        }
+        else
+        {
+            NativeMethods.SendKeyPress((ushort)NativeMethods.VK_RETURN);
+        }
     }
 
     private void FallbackInput(IntPtr hwnd, string id, string pw)
