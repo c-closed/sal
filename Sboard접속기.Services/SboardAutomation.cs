@@ -10,7 +10,7 @@ public class SboardAutomation
 {
     private const string LoginWindowTitle = "Sboard";
     private const string SessionPrefix = "Sboard [";
-    private const string EditClassName = "Edit";
+    private static readonly string[] EditClassNames = ["Edit", "TEdit", "TLabeledEdit"];
 
     public bool LaunchSboard()
     {
@@ -136,7 +136,7 @@ public class SboardAutomation
             if (!NativeMethods.IsWindowVisible(child)) return true;
             classNameBuf.Clear();
             NativeMethods.GetClassNameW(child, classNameBuf, classNameBuf.Capacity);
-            if (classNameBuf.ToString() == EditClassName)
+            if (EditClassNames.Contains(classNameBuf.ToString()))
                 fields.Add(child);
             return true;
         }, IntPtr.Zero);
@@ -153,13 +153,14 @@ public class SboardAutomation
     {
         var buttons = new List<IntPtr>();
         var classNameBuf = new StringBuilder(256);
+        string[] btnClassNames = ["Button", "TButton"];
 
         NativeMethods.EnumChildWindows(loginHwnd, (child, _) =>
         {
             if (!NativeMethods.IsWindowVisible(child)) return true;
             classNameBuf.Clear();
             NativeMethods.GetClassNameW(child, classNameBuf, classNameBuf.Capacity);
-            if (classNameBuf.ToString() == NativeMethods.ButtonClassName)
+            if (btnClassNames.Contains(classNameBuf.ToString()))
                 buttons.Add(child);
             return true;
         }, IntPtr.Zero);
@@ -171,7 +172,9 @@ public class SboardAutomation
         }
         else
         {
-            NativeMethods.SendKeyPress((ushort)NativeMethods.VK_RETURN);
+            NativeMethods.SetForegroundWindow(loginHwnd);
+            Thread.Sleep(100);
+            PressKey(NativeMethods.VK_RETURN);
         }
     }
 
